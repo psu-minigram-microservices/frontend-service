@@ -1,0 +1,14 @@
+name: minigram
+
+services:
+  frontend-service:
+    build: .
+    container_name: minigram-frontend-service
+    ports:
+      - "${FRONTEND_SERVICE_PORT:-8080}:8080"
+    networks:
+      - minigram
+    restart: unless-stopped
+
+networks:
+  minigram:

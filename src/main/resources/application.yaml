@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: minigram-frontend
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    root: INFO
+    '[me.soknight.minigram.frontend]': DEBUG
+    '[org.springframework.web]': DEBUG
+  pattern:
+    console: '%clr([){faint}%clr(%d{HH:mm:ss}){magenta}%clr(]){faint} %clr(%5p) %clr(:){faint} %clr(%-40.40logger{0}){cyan} %clr(:){faint} %m%n%wEx'

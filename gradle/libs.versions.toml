@@ -1,0 +1,21 @@
+[versions]
+lombok = "1.18.44"
+spring-boot = "4.0.3"
+spring-dependency-management = "1.1.7"
+
+[libraries]
+# --- spring boot starters ---
+spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+
+# --- 3rd-party ---
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+[bundles]
+# --- spring boot starters ---
+spring-boot-starters = [
+    "spring-boot-starter-webmvc",
+]
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
