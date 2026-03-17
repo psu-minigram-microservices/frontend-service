@@ -33,7 +33,4 @@ docker compose up --build
 
 ```bash
 docker compose down
-
-# to also remove the database volume:
-docker compose down -v
 ```
