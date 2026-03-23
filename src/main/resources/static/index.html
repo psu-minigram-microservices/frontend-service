@@ -1705,13 +1705,14 @@
         await loadProfile();
         updateSidebarUser();
 
-        connectWebSocket();
-        loadChats();
-        loadProfilesCache();
-
-        // Prompt new users to create a profile
         if (isNewRegistration && !userProfile) {
+            // New user without profile — show creation modal first,
+            // WebSocket and data will be loaded after profile is created
             showModal('create-profile-modal');
+        } else {
+            connectWebSocket();
+            loadChats();
+            loadProfilesCache();
         }
     }
 
@@ -1726,7 +1727,7 @@
     function updateSidebarUser() {
         const nameEl = document.getElementById('user-display-name');
         const avatarEl = document.getElementById('sidebar-avatar');
-        const name = userProfile?.name || shortId(userId);
+        const name = userProfile?.name || shortId(userProfile?.id || userId);
         nameEl.textContent = name;
 
         if (userProfile?.photoUrl) {
@@ -1751,9 +1752,13 @@
             await api('POST', '/api/v1/profiles', { name, photoUrl });
             await loadProfile();
             updateSidebarUser();
-            loadProfilesCache();
             hideModal('create-profile-modal');
             toast('Profile created', 'success');
+
+            // Now that the profile exists, initialize WebSocket and load data
+            connectWebSocket();
+            loadChats();
+            loadProfilesCache();
         } catch (e) { toast('Failed to create profile: ' + e.message, 'error'); }
     }
 
@@ -1872,6 +1877,7 @@
     function refresh() {
         loadChats();
         loadContacts();
+        loadProfilesCache();
     }
 
     async function loadChats() {
@@ -1907,8 +1913,8 @@
     function chatDisplayName(chat) {
         if (chat.type === 'saved') return 'Saved Messages';
         if (chat.type === 'direct') {
-            const other = chat.members?.find(m => m.user_id !== userId);
-            return other?.name || other?.user_id || 'Direct Chat';
+            const other = chat.members?.find(m => m.profile_id !== userProfile?.id);
+            return other?.name || other?.profile_id || 'Direct Chat';
         }
         return chat.title || 'Group Chat';
     }
@@ -1925,7 +1931,7 @@
 
         // Adapt header actions to chat type
         const isGroup = type === 'group';
-        const isOwner = chat?.owner_id === userId;
+        const isOwner = chat?.owner_id === userProfile?.id;
         document.getElementById('btn-members').style.display = isGroup ? '' : 'none';
         document.getElementById('btn-edit-chat').style.display = isGroup ? '' : 'none';
         document.getElementById('btn-leave-chat').style.display = (isGroup && !isOwner) ? '' : 'none';
@@ -1954,11 +1960,11 @@
             return;
         }
         area.innerHTML = messages.map(m => {
-            const own = m.sender?.user_id === userId;
+            const own = m.sender?.profile_id === userProfile?.id;
             const edited = m.updated_at && m.updated_at !== m.created_at;
             return `
                 <div class="message ${own ? 'own' : 'other'}" id="msg-${m.id}">
-                    ${!own ? `<div class="message-sender">${esc(m.sender?.name || shortId(m.sender?.user_id))}</div>` : ''}
+                    ${!own ? `<div class="message-sender">${esc(m.sender?.name || shortId(m.sender?.profile_id))}</div>` : ''}
                     <div class="message-content">${esc(m.content)}</div>
                     <div class="message-footer">
                         <span class="message-time">${fmtTime(m.created_at)}</span>
@@ -2015,22 +2021,16 @@
         } catch (e) { toast('Failed to load members: ' + e.message, 'error'); }
     }
 
-    function resolveName(uid) {
-        if (uid === userId) return userProfile?.name || shortId(uid);
-        const p = profilesCache.find(p => p.id === uid);
-        return p?.name || shortId(uid);
-    }
-
     function renderMembers(members) {
         const chat = chats.find(c => c.id === currentChatId);
-        const isOwner = chat?.owner_id === userId;
+        const isOwner = chat?.owner_id === userProfile?.id;
         document.getElementById('members-list').innerHTML = members.map(m => {
-            const canKick = isOwner && m.user_id !== userId;
+            const canKick = isOwner && m.profile_id !== userProfile?.id;
             return `
             <div class="member-item">
-                <span class="member-uuid">${esc(m.name || shortId(m.user_id))}</span>
+                <span class="member-uuid">${esc(m.name || shortId(m.profile_id))}</span>
                 <span class="member-role-tag ${m.role === 'OWNER' ? 'owner' : ''}">${m.role}</span>
-                ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.user_id}')">Kick</button>` : ''}
+                ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.profile_id}')">Kick</button>` : ''}
             </div>`;
         }).join('');
     }
@@ -2215,13 +2215,14 @@
         const input = document.getElementById('send-invite-user');
         const uid = input.dataset.selectedId || input.value.trim();
         if (!uid) { toast('Please select a user', 'error'); return; }
-        if (uid === userId) { toast('You cannot add yourself', 'error'); return; }
+        if (uid === userProfile?.id) { toast('You cannot add yourself', 'error'); return; }
         try {
             await api('POST', `/api/v1/profiles/relations/send/${uid}`);
             hideModal('send-invite-modal');
             input.dataset.selectedId = '';
             toast('Invite sent', 'success');
             loadContacts();
+            loadProfilesCache();
         } catch (e) { toast('Invite failed: ' + e.message, 'error'); }
     }
 
@@ -2230,6 +2231,7 @@
             await api('POST', `/api/v1/profiles/relations/reply/${senderId}?status=${status}`);
             toast(`Invite ${status.toLowerCase()}`, 'success');
             loadContacts();
+            loadProfilesCache();
         } catch (e) { toast('Reply failed: ' + e.message, 'error'); }
     }
 
@@ -2239,6 +2241,7 @@
             await api('DELETE', `/api/v1/profiles/relations/${receiverId}`);
             toast('Contact removed', 'success');
             loadContacts();
+            loadProfilesCache();
         } catch (e) { toast('Remove failed: ' + e.message, 'error'); }
     }
 
