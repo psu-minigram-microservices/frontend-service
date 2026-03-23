@@ -1739,7 +1739,7 @@
     async function loadProfilesCache() {
         try {
             const data = await api('GET', '/api/v1/profiles?PerPage=100');
-            profilesCache = (data.data || []).filter(p => p.id !== userId);
+            profilesCache = (data.data || []).filter(p => p.id !== userProfile?.id);
         } catch { profilesCache = []; }
     }
 
@@ -1908,7 +1908,7 @@
         if (chat.type === 'saved') return 'Saved Messages';
         if (chat.type === 'direct') {
             const other = chat.members?.find(m => m.user_id !== userId);
-            return other ? other.user_id : 'Direct Chat';
+            return other?.name || other?.user_id || 'Direct Chat';
         }
         return chat.title || 'Group Chat';
     }
@@ -1958,7 +1958,7 @@
             const edited = m.updated_at && m.updated_at !== m.created_at;
             return `
                 <div class="message ${own ? 'own' : 'other'}" id="msg-${m.id}">
-                    ${!own ? `<div class="message-sender">${shortId(m.sender?.user_id)}</div>` : ''}
+                    ${!own ? `<div class="message-sender">${esc(m.sender?.name || shortId(m.sender?.user_id))}</div>` : ''}
                     <div class="message-content">${esc(m.content)}</div>
                     <div class="message-footer">
                         <span class="message-time">${fmtTime(m.created_at)}</span>
@@ -2028,7 +2028,7 @@
             const canKick = isOwner && m.user_id !== userId;
             return `
             <div class="member-item">
-                <span class="member-uuid">${esc(resolveName(m.user_id))}</span>
+                <span class="member-uuid">${esc(m.name || shortId(m.user_id))}</span>
                 <span class="member-role-tag ${m.role === 'OWNER' ? 'owner' : ''}">${m.role}</span>
                 ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.user_id}')">Kick</button>` : ''}
             </div>`;
