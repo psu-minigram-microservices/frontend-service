@@ -960,6 +960,192 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
+        /* ── Autocomplete ── */
+        .autocomplete-wrap { position: relative; }
+
+        .autocomplete-list {
+            position: absolute;
+            left: 0; right: 0;
+            top: 100%;
+            margin-top: -10px;
+            background: var(--deep);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xs);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        .autocomplete-list.show { display: block; }
+
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+
+        .autocomplete-item:hover { background: rgba(255,255,255,0.06); }
+
+        .autocomplete-item-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: var(--gradient-soft);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .autocomplete-item-avatar img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .autocomplete-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-item-id {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* ── Sidebar Tabs ── */
+        .sidebar-tabs {
+            display: flex;
+            gap: 2px;
+            background: rgba(0,0,0,0.25);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+            margin: 10px 18px 0;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 9px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-tab.active {
+            background: rgba(124,58,237,0.15);
+            color: var(--text);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-tab:hover:not(.active) { color: var(--text-secondary); }
+
+        .sidebar-tab-content { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+        .sidebar-tab-content.active { display: flex; }
+
+        /* ── Contacts ── */
+        .contacts-header {
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .contacts-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-dim);
+            padding: 14px 18px 6px;
+        }
+
+        .contacts-list {
+            padding: 0 8px 8px;
+        }
+
+        .contact-item {
+            padding: 10px 14px;
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+            transition: background 0.15s;
+        }
+
+        .contact-item:hover { background: rgba(255,255,255,0.03); }
+
+        .contact-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--gradient-soft);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .contact-avatar img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .contact-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .contact-actions .btn { padding: 5px 10px; font-size: 12px; }
+
+        .contacts-empty {
+            padding: 24px 20px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .sidebar-user-info { cursor: pointer; }
+        .sidebar-user-info:hover .sidebar-user-name { color: var(--text); }
+
         /* ── Active chat container ── */
         #active-chat {
             display: none;
@@ -1035,17 +1221,39 @@
                     <div class="sidebar-brand-icon">M</div>
                     <h2>Minigram</h2>
                 </div>
-                <div class="sidebar-user-info">
+                <div class="sidebar-user-info" onclick="showEditProfileModal()" title="Edit profile">
                     <div class="sidebar-avatar" id="sidebar-avatar"></div>
                     <span class="sidebar-user-name" id="user-display-name"></span>
                 </div>
             </div>
             <div class="sidebar-actions">
                 <button class="btn btn-primary btn-sm" onclick="showCreateChatModal()">New Chat</button>
-                <button class="btn btn-ghost btn-sm" onclick="loadChats()">Refresh</button>
+                <button class="btn btn-ghost btn-sm" onclick="refresh()">Refresh</button>
                 <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
             </div>
-            <div class="chat-list" id="chat-list"></div>
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" onclick="switchSidebarTab('chats')">Chats</button>
+                <button class="sidebar-tab" onclick="switchSidebarTab('contacts')">Contacts</button>
+            </div>
+            <div class="sidebar-tab-content active" id="chats-tab">
+                <div class="chat-list" id="chat-list"></div>
+            </div>
+            <div class="sidebar-tab-content" id="contacts-tab">
+                <div class="contacts-header">
+                    <span style="font-size:14px;font-weight:600;color:var(--text-secondary)">Contacts</span>
+                    <button class="btn btn-primary btn-sm" onclick="showSendInviteModal()">Add Contact</button>
+                </div>
+                <div id="contacts-content">
+                    <div class="contacts-section-title">Friends</div>
+                    <div class="contacts-list" id="friends-list"></div>
+                    <div class="contacts-section-title">Incoming Invites</div>
+                    <div class="contacts-list" id="incoming-invites-list"></div>
+                    <div class="contacts-section-title">Sent Invites</div>
+                    <div class="contacts-list" id="sent-invites-list"></div>
+                    <div class="contacts-section-title">Blocked</div>
+                    <div class="contacts-list" id="blocked-list"></div>
+                </div>
+            </div>
             <div class="events-log" id="events-log"></div>
             <div class="ws-status">
                 <div class="ws-dot" id="ws-dot"></div>
@@ -1069,6 +1277,7 @@
                     <div class="chat-header-actions">
                         <button class="btn btn-ghost btn-sm" id="btn-members" onclick="toggleMembers()">Members</button>
                         <button class="btn btn-ghost btn-sm" id="btn-edit-chat" onclick="showEditChatModal()">Edit</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-leave-chat" onclick="leaveChat()" style="display:none">Leave</button>
                         <button class="btn btn-danger-ghost btn-sm" onclick="deleteChat()">Delete</button>
                     </div>
                 </div>
@@ -1107,7 +1316,10 @@
         </div>
         <div id="chat-members-field">
             <label class="field-label" id="chat-members-label" for="new-chat-members">Member UUIDs</label>
-            <input class="field-input" type="text" id="new-chat-members" placeholder="uuid1, uuid2, ...">
+            <div class="autocomplete-wrap">
+                <input class="field-input" type="text" id="new-chat-members" placeholder="uuid1, uuid2, ..." autocomplete="off">
+                <div class="autocomplete-list" id="ac-new-chat-members"></div>
+            </div>
         </div>
         <div class="modal-actions">
             <button class="btn btn-ghost" onclick="hideModal('create-chat-modal')">Cancel</button>
@@ -1134,7 +1346,10 @@
     <div class="modal">
         <h3>Invite Member</h3>
         <label class="field-label" for="invite-user-id">User UUID</label>
-        <input class="field-input" type="text" id="invite-user-id" placeholder="00000000-0000-0000-0000-000000000000">
+        <div class="autocomplete-wrap">
+            <input class="field-input" type="text" id="invite-user-id" placeholder="Start typing a name..." autocomplete="off">
+            <div class="autocomplete-list" id="ac-invite-user-id"></div>
+        </div>
         <div class="modal-actions">
             <button class="btn btn-ghost" onclick="hideModal('invite-member-modal')">Cancel</button>
             <button class="btn btn-primary" onclick="inviteMember()">Invite</button>
@@ -1170,6 +1385,37 @@
     </div>
 </div>
 
+<!-- Send Contact Invite Modal -->
+<div class="modal-overlay" id="send-invite-modal">
+    <div class="modal">
+        <h3>Add Contact</h3>
+        <label class="field-label" for="send-invite-user">User</label>
+        <div class="autocomplete-wrap">
+            <input class="field-input" type="text" id="send-invite-user" placeholder="Start typing a name..." autocomplete="off">
+            <div class="autocomplete-list" id="ac-send-invite-user"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="hideModal('send-invite-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="sendContactInvite()">Send Invite</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="edit-profile-modal">
+    <div class="modal">
+        <h3>Edit Profile</h3>
+        <label class="field-label" for="edit-profile-name">Display Name</label>
+        <input class="field-input" type="text" id="edit-profile-name" placeholder="Your name">
+        <label class="field-label" for="edit-profile-photo">Photo URL (optional)</label>
+        <input class="field-input" type="url" id="edit-profile-photo" placeholder="https://example.com/avatar.png">
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="hideModal('edit-profile-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="updateProfile()">Save</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toasts -->
 <div class="toast-container" id="toast-container"></div>
 
@@ -1184,6 +1430,7 @@
     let currentChatId = null;
     let chats = [];
     let messages = [];
+    let profilesCache = [];
 
     // ── Auth ──
 
@@ -1312,6 +1559,7 @@
 
         connectWebSocket();
         loadChats();
+        loadProfilesCache();
 
         // Prompt new users to create a profile
         if (isNewRegistration && !userProfile) {
@@ -1340,6 +1588,13 @@
         }
     }
 
+    async function loadProfilesCache() {
+        try {
+            const data = await api('GET', '/api/v1/profiles?PerPage=100');
+            profilesCache = (data.data || []).filter(p => p.id !== userId);
+        } catch { profilesCache = []; }
+    }
+
     async function createProfile() {
         const name = document.getElementById('new-profile-name').value.trim();
         if (!name) { toast('Please enter a name', 'error'); return; }
@@ -1348,6 +1603,7 @@
             await api('POST', '/api/v1/profiles', { name, photoUrl });
             await loadProfile();
             updateSidebarUser();
+            loadProfilesCache();
             hideModal('create-profile-modal');
             toast('Profile created', 'success');
         } catch (e) { toast('Failed to create profile: ' + e.message, 'error'); }
@@ -1465,6 +1721,11 @@
 
     // ── Chats ──
 
+    function refresh() {
+        loadChats();
+        loadContacts();
+    }
+
     async function loadChats() {
         try {
             const data = await api('GET', '/api/v1/chats?size=100');
@@ -1516,8 +1777,10 @@
 
         // Adapt header actions to chat type
         const isGroup = type === 'group';
+        const isOwner = chat?.owner_id === userId;
         document.getElementById('btn-members').style.display = isGroup ? '' : 'none';
         document.getElementById('btn-edit-chat').style.display = isGroup ? '' : 'none';
+        document.getElementById('btn-leave-chat').style.display = (isGroup && !isOwner) ? '' : 'none';
         if (!isGroup) document.getElementById('members-panel').classList.remove('show');
 
         renderChatList();
@@ -1604,17 +1867,38 @@
         } catch (e) { toast('Failed to load members: ' + e.message, 'error'); }
     }
 
+    function resolveName(uid) {
+        if (uid === userId) return userProfile?.name || shortId(uid);
+        const p = profilesCache.find(p => p.id === uid);
+        return p?.name || shortId(uid);
+    }
+
     function renderMembers(members) {
-        document.getElementById('members-list').innerHTML = members.map(m => `
+        const chat = chats.find(c => c.id === currentChatId);
+        const isOwner = chat?.owner_id === userId;
+        document.getElementById('members-list').innerHTML = members.map(m => {
+            const canKick = isOwner && m.user_id !== userId;
+            return `
             <div class="member-item">
-                <span class="member-uuid">${m.user_id}</span>
+                <span class="member-uuid">${esc(resolveName(m.user_id))}</span>
                 <span class="member-role-tag ${m.role === 'OWNER' ? 'owner' : ''}">${m.role}</span>
-            </div>
-        `).join('');
+                ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.user_id}')">Kick</button>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    async function kickMember(memberId) {
+        if (!confirm('Kick this member?')) return;
+        try {
+            await api('DELETE', `/api/v1/chats/${currentChatId}/members/${memberId}`);
+            await loadMembers();
+            toast('Member kicked', 'success');
+        } catch (e) { toast('Kick failed: ' + e.message, 'error'); }
     }
 
     async function inviteMember() {
-        const uid = document.getElementById('invite-user-id').value.trim();
+        const input = document.getElementById('invite-user-id');
+        const uid = input.dataset.selectedId || input.value.trim();
         if (!uid) return;
         try {
             await api('POST', `/api/v1/chats/${currentChatId}/members/${uid}`);
@@ -1667,6 +1951,239 @@
         } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
     }
 
+    // ── Leave Chat ──
+
+    async function leaveChat() {
+        if (!confirm('Leave this chat?')) return;
+        try {
+            await api('DELETE', `/api/v1/chats/${currentChatId}/members/me`);
+            currentChatId = null;
+            document.getElementById('active-chat').classList.remove('show');
+            document.getElementById('no-chat').style.display = '';
+            document.getElementById('members-panel').classList.remove('show');
+            await loadChats();
+            toast('Left the chat', 'success');
+        } catch (e) { toast('Leave failed: ' + e.message, 'error'); }
+    }
+
+    // ── Contacts ──
+
+    function switchSidebarTab(tab) {
+        document.querySelectorAll('.sidebar-tab').forEach((t, i) => {
+            t.classList.toggle('active', (tab === 'chats' && i === 0) || (tab === 'contacts' && i === 1));
+        });
+        document.getElementById('chats-tab').classList.toggle('active', tab === 'chats');
+        document.getElementById('contacts-tab').classList.toggle('active', tab === 'contacts');
+        if (tab === 'contacts') loadContacts();
+    }
+
+    async function loadContacts() {
+        try {
+            const [friendsData, incomingData, outgoingData, blockedData] = await Promise.all([
+                api('GET', '/api/v1/profiles/relations?status=Friend&type=Incoming&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=None&type=Incoming&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=None&type=Outgoing&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=Blocked&type=Incoming&PerPage=100'),
+            ]);
+            renderFriends(friendsData.data || []);
+            renderIncomingInvites(incomingData.data || []);
+            renderSentInvites(outgoingData.data || []);
+            renderBlocked(blockedData.data || []);
+        } catch (e) { toast('Failed to load contacts: ' + e.message, 'error'); }
+    }
+
+    function renderFriends(friends) {
+        const el = document.getElementById('friends-list');
+        if (!friends.length) { el.innerHTML = '<div class="contacts-empty">No friends yet</div>'; return; }
+        el.innerHTML = friends.map(f => `
+            <div class="contact-item">
+                <div class="contact-avatar">${profileAvatar(f)}</div>
+                <span class="contact-name">${esc(f.name || shortId(f.id))}</span>
+                <div class="contact-actions">
+                    <button class="btn btn-danger-ghost btn-sm" onclick="deleteRelation('${f.id}')">Remove</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderIncomingInvites(invites) {
+        const el = document.getElementById('incoming-invites-list');
+        if (!invites.length) { el.innerHTML = '<div class="contacts-empty">No incoming invites</div>'; return; }
+        el.innerHTML = invites.map(p => `
+            <div class="contact-item">
+                <div class="contact-avatar">${profileAvatar(p)}</div>
+                <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
+                <div class="contact-actions">
+                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 'Accepted')">Accept</button>
+                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 'Rejected')">Reject</button>
+                    <button class="btn btn-danger-ghost btn-sm" onclick="replyContactInvite('${p.id}', 'Blocked')">Block</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderSentInvites(invites) {
+        const el = document.getElementById('sent-invites-list');
+        if (!invites.length) { el.innerHTML = '<div class="contacts-empty">No sent invites</div>'; return; }
+        el.innerHTML = invites.map(p => `
+            <div class="contact-item">
+                <div class="contact-avatar">${profileAvatar(p)}</div>
+                <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
+                <div class="contact-actions">
+                    <button class="btn btn-ghost btn-sm" disabled style="opacity:0.5">Pending</button>
+                    <button class="btn btn-danger-ghost btn-sm" onclick="deleteRelation('${p.id}')">Cancel</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderBlocked(blocked) {
+        const el = document.getElementById('blocked-list');
+        if (!blocked.length) { el.innerHTML = '<div class="contacts-empty">No blocked users</div>'; return; }
+        el.innerHTML = blocked.map(p => `
+            <div class="contact-item">
+                <div class="contact-avatar">${profileAvatar(p)}</div>
+                <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
+                <div class="contact-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="deleteRelation('${p.id}')">Unblock</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function profileAvatar(profile) {
+        if (profile.photoUrl) return `<img src="${esc(profile.photoUrl)}" alt="">`;
+        return (profile.name || '?').charAt(0).toUpperCase();
+    }
+
+    // ── Contact Invite ──
+
+    function showSendInviteModal() {
+        document.getElementById('send-invite-user').value = '';
+        showModal('send-invite-modal');
+    }
+
+    async function sendContactInvite() {
+        const input = document.getElementById('send-invite-user');
+        const uid = input.dataset.selectedId || input.value.trim();
+        if (!uid) { toast('Please select a user', 'error'); return; }
+        if (uid === userId) { toast('You cannot add yourself', 'error'); return; }
+        try {
+            await api('POST', `/api/v1/profiles/relations/send/${uid}`);
+            hideModal('send-invite-modal');
+            input.dataset.selectedId = '';
+            toast('Invite sent', 'success');
+            loadContacts();
+        } catch (e) { toast('Invite failed: ' + e.message, 'error'); }
+    }
+
+    async function replyContactInvite(senderId, status) {
+        try {
+            await api('POST', `/api/v1/profiles/relations/reply/${senderId}?status=${status}`);
+            toast(`Invite ${status.toLowerCase()}`, 'success');
+            loadContacts();
+        } catch (e) { toast('Reply failed: ' + e.message, 'error'); }
+    }
+
+    async function deleteRelation(receiverId) {
+        if (!confirm('Remove this contact?')) return;
+        try {
+            await api('DELETE', `/api/v1/profiles/relations/${receiverId}`);
+            toast('Contact removed', 'success');
+            loadContacts();
+        } catch (e) { toast('Remove failed: ' + e.message, 'error'); }
+    }
+
+    // ── Edit Profile ──
+
+    function showEditProfileModal() {
+        if (!userProfile) { toast('Create a profile first', 'error'); return; }
+        document.getElementById('edit-profile-name').value = userProfile.name || '';
+        document.getElementById('edit-profile-photo').value = userProfile.photoUrl || '';
+        showModal('edit-profile-modal');
+    }
+
+    async function updateProfile() {
+        const name = document.getElementById('edit-profile-name').value.trim();
+        if (!name) { toast('Please enter a name', 'error'); return; }
+        const photoUrl = document.getElementById('edit-profile-photo').value.trim() || null;
+        try {
+            await api('PUT', '/api/v1/profiles', { name, photoUrl });
+            await loadProfile();
+            updateSidebarUser();
+            loadProfilesCache();
+            hideModal('edit-profile-modal');
+            toast('Profile updated', 'success');
+        } catch (e) { toast('Failed to update profile: ' + e.message, 'error'); }
+    }
+
+    // ── Autocomplete ──
+
+    function setupAutocomplete(inputId, listId, onSelect) {
+        const input = document.getElementById(inputId);
+        const list = document.getElementById(listId);
+        if (!input || !list) return;
+
+        input.addEventListener('input', () => {
+            const raw = input.value;
+            // For multi-value inputs, search by text after last comma
+            const parts = raw.split(',');
+            const query = parts[parts.length - 1].trim().toLowerCase();
+            if (!query || query.length < 1) { list.classList.remove('show'); return; }
+
+            const matches = profilesCache.filter(p =>
+                (p.name && p.name.toLowerCase().includes(query)) ||
+                p.id.toLowerCase().includes(query)
+            ).slice(0, 8);
+
+            if (!matches.length) { list.classList.remove('show'); return; }
+
+            list.innerHTML = matches.map(p => `
+                <div class="autocomplete-item" data-id="${p.id}">
+                    <div class="autocomplete-item-avatar">${profileAvatar(p)}</div>
+                    <span class="autocomplete-item-name">${esc(p.name || 'Unknown')}</span>
+                    <span class="autocomplete-item-id">${shortId(p.id)}</span>
+                </div>
+            `).join('');
+            list.classList.add('show');
+
+            list.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const profile = matches.find(p => p.id === item.dataset.id);
+                    if (profile) onSelect(profile, input);
+                    list.classList.remove('show');
+                });
+            });
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => list.classList.remove('show'), 150);
+        });
+    }
+
+    function acAppendUuid(profile, input) {
+        const parts = input.value.split(',').map(s => s.trim()).filter(Boolean);
+        // Replace the last (incomplete) part with the selected UUID
+        if (parts.length > 0) {
+            const lastPart = parts[parts.length - 1];
+            // If last part doesn't look like a UUID, replace it
+            if (!lastPart.match(/^[0-9a-f-]{36}$/i)) {
+                parts[parts.length - 1] = profile.id;
+            } else {
+                parts.push(profile.id);
+            }
+        } else {
+            parts.push(profile.id);
+        }
+        input.value = parts.join(', ');
+    }
+
+    function acSetUuid(profile, input) {
+        input.value = profile.name || profile.id;
+        input.dataset.selectedId = profile.id;
+    }
+
     // ── WebSocket Events ──
 
     function handleEvent(ev) {
@@ -1695,6 +2212,29 @@
                 break;
             case 'MEMBER_LEFT':
                 if (ev.chat_id === currentChatId) loadMembers();
+                loadChats();
+                break;
+            case 'CHAT_CREATED':
+                loadChats();
+                break;
+            case 'CHAT_UPDATED':
+                if (ev.payload) {
+                    const idx = chats.findIndex(c => c.id === ev.payload.id);
+                    if (idx >= 0) chats[idx] = ev.payload;
+                    renderChatList();
+                    if (ev.chat_id === currentChatId) {
+                        document.getElementById('chat-title').textContent = chatDisplayName(ev.payload);
+                    }
+                }
+                loadChats();
+                break;
+            case 'CHAT_DELETED':
+                if (ev.chat_id === currentChatId) {
+                    currentChatId = null;
+                    document.getElementById('active-chat').classList.remove('show');
+                    document.getElementById('no-chat').style.display = '';
+                    document.getElementById('members-panel').classList.remove('show');
+                }
                 loadChats();
                 break;
         }
@@ -1732,7 +2272,9 @@
     }
 
     function showInviteMemberModal() {
-        document.getElementById('invite-user-id').value = '';
+        const input = document.getElementById('invite-user-id');
+        input.value = '';
+        input.dataset.selectedId = '';
         showModal('invite-member-modal');
     }
 
@@ -1805,6 +2347,11 @@
             if (e.target === o && o.id !== 'create-profile-modal') o.classList.remove('show');
         });
     });
+
+    // Init autocomplete
+    setupAutocomplete('new-chat-members', 'ac-new-chat-members', acAppendUuid);
+    setupAutocomplete('invite-user-id', 'ac-invite-user-id', acSetUuid);
+    setupAutocomplete('send-invite-user', 'ac-send-invite-user', acSetUuid);
 
     // Init — set default server URL to current host
     document.getElementById('base-url').value = window.location.origin;
