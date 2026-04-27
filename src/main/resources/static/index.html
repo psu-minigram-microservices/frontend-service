@@ -1573,6 +1573,67 @@
     let token = '';
     let refreshTokenValue = '';
     let userId = '';
+
+    // Load tokens from localStorage on startup
+    (function initAuth() {
+        console.log('Initializing auth...');
+        const savedToken = localStorage.getItem('minigram-token');
+        const savedRefreshToken = localStorage.getItem('minigram-refresh-token');
+        
+        if (savedToken && savedRefreshToken) {
+            console.log('Found saved tokens, attempting auto-login');
+            token = savedToken;
+            refreshTokenValue = savedRefreshToken;
+            
+            // Set baseUrl to current origin for token validation and API calls
+            baseUrl = window.location.origin;
+            console.log('Base URL set to:', baseUrl);
+            
+            // Try to parse user ID from token
+            try {
+                const payload = parseJwt(token);
+                userId = payload.sub;
+                console.log('User ID from token:', userId);
+                
+                // Validate token and potentially refresh it
+                validateAndRefreshToken().then(isValid => {
+                    console.log('Token validation result:', isValid);
+                    if (isValid) {
+                        // Token is valid, proceed to main screen
+                        console.log('Loading user profile...');
+                        loadUserProfile().then(() => {
+                            console.log('User profile loaded, entering main screen');
+                            enterMainScreen();
+                        }).catch((error) => {
+                            // Failed to load profile, clear tokens and show auth screen
+                            console.error('Failed to load user profile:', error);
+                            clearAuthTokens();
+                            document.getElementById('auth-screen').style.display = '';
+                            document.getElementById('main-screen').style.display = 'none';
+                        });
+                    } else {
+                        // Token invalid, clear tokens and show auth screen
+                        console.log('Token is invalid, clearing auth tokens');
+                        clearAuthTokens();
+                        document.getElementById('auth-screen').style.display = '';
+                        document.getElementById('main-screen').style.display = 'none';
+                    }
+                }).catch((error) => {
+                    console.error('Error validating token:', error);
+                    // Token validation failed, clear tokens and show auth screen
+                    clearAuthTokens();
+                    document.getElementById('auth-screen').style.display = '';
+                    document.getElementById('main-screen').style.display = 'none';
+                });
+            } catch (e) {
+                console.error('Invalid token, clearing storage:', e);
+                // Invalid token, clear storage
+                clearAuthTokens();
+            }
+        } else {
+            console.log('No saved tokens found, showing auth screen');
+        }
+    })();
     let userProfile = null;
     let stompClient = null;
     let currentChatId = null;
@@ -1585,6 +1646,57 @@
     function parseJwt(t) {
         const payload = t.split('.')[1];
         return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    }
+
+    function saveAuthTokens(accessToken, refreshToken) {
+        token = accessToken;
+        refreshTokenValue = refreshToken;
+        localStorage.setItem('minigram-token', accessToken);
+        localStorage.setItem('minigram-refresh-token', refreshToken);
+    }
+
+    function clearAuthTokens() {
+        token = '';
+        refreshTokenValue = '';
+        userId = '';
+        localStorage.removeItem('minigram-token');
+        localStorage.removeItem('minigram-refresh-token');
+    }
+
+    async function validateAndRefreshToken() {
+        try {
+            // Check if token is expired
+            const payload = parseJwt(token);
+            const exp = payload.exp;
+            const now = Math.floor(Date.now() / 1000);
+            
+            // If token expires in less than 5 minutes, refresh it
+            if (exp - now < 300) {
+                // Token is expired or about to expire, try to refresh
+                const refreshed = await tryRefreshToken();
+                return refreshed;
+            }
+            
+            // Token is still valid
+            return true;
+        } catch (e) {
+            // Invalid token
+            return false;
+        }
+    }
+
+    async function loadUserProfile() {
+        try {
+            const res = await api('GET', '/api/v1/profiles/me');
+            if (res.ok) {
+                userProfile = await res.json();
+                updateSidebarUser();
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        }
     }
 
     function switchAuthTab(tab) {
@@ -1640,6 +1752,7 @@
             token = data.accessToken;
             refreshTokenValue = data.refreshToken;
             userId = parseJwt(token).sub;
+            saveAuthTokens(token, refreshTokenValue);
             await enterMainScreen();
         } catch (e) {
             showAuthError(e.message);
@@ -1665,7 +1778,18 @@
             });
             if (!res.ok) {
                 let msg = `HTTP ${res.status}`;
-                try { const e = await res.json(); msg = e.error_message || e.message || e.title || msg; } catch {}
+                try {
+                    const e = await res.json();
+                    // Handle ASP.NET Core validation problem details
+                    if (e.title === "One or more validation errors occurred." && e.errors) {
+                        const errorMessages = Object.entries(e.errors).flatMap(([field, messages]) =>
+                            Array.isArray(messages) ? messages : [messages]
+                        );
+                        msg = errorMessages.join("; ");
+                    } else {
+                        msg = e.Message || e.message || e.error_message || e.title || msg;
+                    }
+                } catch {}
                 throw new Error(msg);
             }
             const data = await res.json();
@@ -1689,6 +1813,8 @@
             token = t;
             refreshTokenValue = '';
             userId = parseJwt(token).sub;
+            // For JWT fallback, we don't save refresh token since we don't have one
+            localStorage.setItem('minigram-token', token);
             if (!userId) throw new Error('No sub claim');
         } catch (e) {
             showAuthError('Invalid token: ' + e.message);
@@ -1698,6 +1824,7 @@
     }
 
     async function enterMainScreen(isNewRegistration = false) {
+        console.log('Entering main screen, isNewRegistration:', isNewRegistration);
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-screen').style.display = 'block';
 
@@ -1708,8 +1835,20 @@
         if (isNewRegistration && !userProfile) {
             // New user without profile — show creation modal first,
             // WebSocket and data will be loaded after profile is created
+            console.log('New registration without profile, showing create profile modal');
             showModal('create-profile-modal');
         } else {
+            // Ensure any existing websocket is properly disconnected before creating a new one
+            console.log('Setting up WebSocket connection');
+            if (stompClient) {
+                try {
+                    console.log('Deactivating existing WebSocket client');
+                    stompClient.deactivate();
+                } catch (e) {
+                    console.log('Error deactivating websocket:', e);
+                }
+                stompClient = null;
+            }
             connectWebSocket();
             loadChats();
             loadProfilesCache();
@@ -1773,6 +1912,7 @@
         token = '';
         refreshTokenValue = '';
         userProfile = null;
+        clearAuthTokens();
         document.getElementById('auth-screen').style.display = '';
         document.getElementById('main-screen').style.display = 'none';
         document.getElementById('active-chat').classList.remove('show');
@@ -1784,9 +1924,18 @@
     // ── WebSocket ──
 
     function connectWebSocket() {
+        console.log('Attempting to connect WebSocket...');
+        // Don't try to connect if we don't have a token
+        if (!token) {
+            console.log('No token available, cannot connect WebSocket');
+            updateWsStatus('disconnected');
+            return;
+        }
+        
         const wsProto = baseUrl.startsWith('https') ? 'wss' : 'ws';
         const wsHost = baseUrl.replace(/^https?:\/\//, '');
         const wsUrl = `${wsProto}://${wsHost}/ws?token=${encodeURIComponent(token)}`;
+        console.log('WebSocket URL:', wsUrl);
 
         stompClient = new StompJs.Client({
             webSocketFactory: () => new WebSocket(wsUrl),
@@ -1795,24 +1944,43 @@
         });
 
         stompClient.onConnect = () => {
+            console.log('WebSocket connected successfully');
             updateWsStatus('connected');
             logEvent('CONNECTED', 'WebSocket connection established');
-            stompClient.subscribe('/user/queue/events', (frame) => {
-                handleEvent(JSON.parse(frame.body));
-            });
+            try {
+                stompClient.subscribe('/user/queue/events', (frame) => {
+                    console.log('Received event:', frame.body);
+                    handleEvent(JSON.parse(frame.body));
+                });
+            } catch (e) {
+                console.error('Error subscribing to events:', e);
+            }
         };
 
         stompClient.onStompError = (frame) => {
+            console.error('STOMP error:', frame);
             updateWsStatus('error');
             logEvent('ERROR', frame.headers?.message || 'STOMP error');
         };
 
         stompClient.onWebSocketClose = () => {
+            console.log('WebSocket connection closed');
             updateWsStatus('disconnected');
             logEvent('DISCONNECTED', 'Connection closed');
         };
 
-        stompClient.activate();
+        stompClient.onWebSocketError = (evt) => {
+            console.error('WebSocket error:', evt);
+            updateWsStatus('error');
+        };
+
+        try {
+            console.log('Activating STOMP client');
+            stompClient.activate();
+        } catch (e) {
+            console.error('Error activating websocket:', e);
+            updateWsStatus('error');
+        }
     }
 
     function updateWsStatus(status) {
@@ -1833,7 +2001,18 @@
         const res = await fetch(`${baseUrl}${path}`, opts);
         if (!res.ok) {
             let msg = `HTTP ${res.status}`;
-            try { const e = await res.json(); msg = e.error_message || e.message || e.title || msg; } catch {}
+            try {
+                const e = await res.json();
+                // Handle ASP.NET Core validation problem details
+                if (e.title === "One or more validation errors occurred." && e.errors) {
+                    const errorMessages = Object.entries(e.errors).flatMap(([field, messages]) =>
+                        Array.isArray(messages) ? messages : [messages]
+                    );
+                    msg = errorMessages.join("; ");
+                } else {
+                    msg = e.Message || e.message || e.error_message || e.title || msg;
+                }
+            } catch {}
             const err = new Error(msg);
             err.status = res.status;
             throw err;
@@ -1844,10 +2023,12 @@
     }
 
     async function api(method, path, body) {
+        console.log(`API call: ${method} ${path}`);
         try {
             return await apiRaw(method, path, body);
         } catch (e) {
             if (e.status === 401 && refreshTokenValue) {
+                console.log('Token expired, attempting refresh');
                 const refreshed = await tryRefreshToken();
                 if (refreshed) return await apiRaw(method, path, body);
             }
@@ -1857,6 +2038,11 @@
 
     async function tryRefreshToken() {
         try {
+            // Ensure baseUrl is set
+            if (!baseUrl) {
+                baseUrl = window.location.origin;
+            }
+            
             const res = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1866,6 +2052,19 @@
             const data = await res.json();
             token = data.accessToken;
             refreshTokenValue = data.refreshToken;
+            saveAuthTokens(token, refreshTokenValue);
+            
+            // Reconnect WebSocket with new token
+            if (stompClient) {
+                try {
+                    stompClient.deactivate();
+                } catch (e) {
+                    console.log('Error deactivating websocket:', e);
+                }
+                stompClient = null;
+            }
+            connectWebSocket();
+            
             return true;
         } catch {
             return false;
@@ -1875,6 +2074,23 @@
     // ── Chats ──
 
     function refresh() {
+        // Ensure baseUrl is set
+        if (!baseUrl) {
+            baseUrl = window.location.origin;
+        }
+        
+        // Reconnect websocket
+        if (stompClient) {
+            try {
+                stompClient.deactivate();
+            } catch (e) {
+                console.log('Error deactivating websocket:', e);
+            }
+            stompClient = null;
+        }
+        connectWebSocket();
+        
+        // Refresh data
         loadChats();
         loadContacts();
         loadProfilesCache();
