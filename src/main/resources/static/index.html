@@ -2367,8 +2367,8 @@
                 <div class="contact-avatar">${profileAvatar(p)}</div>
                 <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
                 <div class="contact-actions">
-                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 1)">Accept</button>
-                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 0)">Reject</button>
+                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 0)">Accept</button>
+                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 1)">Reject</button>
                     <button class="btn btn-danger-ghost btn-sm" onclick="replyContactInvite('${p.id}', 2)">Block</button>
                 </div>
             </div>
