@@ -1,7 +1,7 @@
 <div align="center">
  <h1>Minigram Frontend Service</h1>
  <div>
-  One-page front-end for Minigram built with Spring Framework 7.
+  One-page front-end for Minigram built with Ktor.
  </div>
 </div>
 
