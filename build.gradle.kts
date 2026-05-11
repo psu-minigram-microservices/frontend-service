@@ -1,23 +1,25 @@
 plugins {
-    java
-    alias(libs.plugins.spring.boot)
-    alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktor)
+    application
 }
 
 group = "me.soknight.minigram"
 version = "1.0"
-description = "frontend-service"
 
-java {
-    toolchain {
+application {
+    mainClass.set("me.soknight.minigram.frontend.ApplicationKt")
+}
+
+kotlin {
+    jvmToolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
-    }
+tasks.run.configure {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 repositories {
@@ -25,7 +27,10 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.bundles.spring.boot.starters)
-
-    annotationProcessor(libs.lombok)
+    implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.call.logging)
+    implementation(libs.logback.classic)
 }

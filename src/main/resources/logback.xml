@@ -1,0 +1,39 @@
+<configuration>
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <!-- APP APPENDERS -->
+
+    <appender name="app-console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <encoder>
+            <pattern>[%date{HH:mm:ss}] %highlight([%.-1level]) %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- LIBRARY APPENDERS -->
+
+    <appender name="lib-console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+
+        <encoder>
+            <pattern>[%date{HH:mm:ss}] %highlight([%.-1level]) %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- LIBRARY LOGGING -->
+
+    <logger name="io.ktor" level="INFO" additivity="false">
+        <appender-ref ref="lib-console"/>
+    </logger>
+
+    <!-- APP LOGGING -->
+
+    <root level="DEBUG">
+        <appender-ref ref="app-console"/>
+    </root>
+</configuration>

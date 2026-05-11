@@ -1,21 +1,18 @@
 [versions]
-lombok = "1.18.44"
-spring-boot = "4.0.3"
-spring-dependency-management = "1.1.7"
+kotlin-platform = "2.3.21"
+ktor = "3.4.3"
+logback = "1.5.32"
 
 [libraries]
-# --- spring boot starters ---
-spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
-# --- 3rd-party ---
-lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
-
-[bundles]
-# --- spring boot starters ---
-spring-boot-starters = [
-    "spring-boot-starter-webmvc",
-]
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 
 [plugins]
-spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
-spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-platform" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-platform" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }

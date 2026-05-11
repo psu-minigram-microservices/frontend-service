@@ -12,14 +12,14 @@ RUN chmod +x gradlew && \
 COPY src/ src/
 
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew bootJar --no-daemon -x test
+    ./gradlew buildFatJar --no-daemon -x test
 
 FROM azul/zulu-openjdk:25-jre
 
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/build/libs/*-all.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "--enable-native-access=ALL-UNNAMED", "-jar", "app.jar"]
