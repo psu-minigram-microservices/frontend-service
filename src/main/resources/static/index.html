@@ -2333,10 +2333,10 @@
     async function loadContacts() {
         try {
             const [friendsData, incomingData, outgoingData, blockedData] = await Promise.all([
-                api('GET', '/api/v1/profiles/relations?status=Friend&type=Incoming&PerPage=100'),
-                api('GET', '/api/v1/profiles/relations?status=None&type=Incoming&PerPage=100'),
-                api('GET', '/api/v1/profiles/relations?status=None&type=Outgoing&PerPage=100'),
-                api('GET', '/api/v1/profiles/relations?status=Blocked&type=Incoming&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=1&type=1&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=0&type=0&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=0&type=1&PerPage=100'),
+                api('GET', '/api/v1/profiles/relations?status=2&type=1&PerPage=100'),
             ]);
             renderFriends(friendsData.data || []);
             renderIncomingInvites(incomingData.data || []);
@@ -2367,9 +2367,9 @@
                 <div class="contact-avatar">${profileAvatar(p)}</div>
                 <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
                 <div class="contact-actions">
-                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 'Accepted')">Accept</button>
-                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 'Rejected')">Reject</button>
-                    <button class="btn btn-danger-ghost btn-sm" onclick="replyContactInvite('${p.id}', 'Blocked')">Block</button>
+                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 1)">Accept</button>
+                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 0)">Reject</button>
+                    <button class="btn btn-danger-ghost btn-sm" onclick="replyContactInvite('${p.id}', 2)">Block</button>
                 </div>
             </div>
         `).join('');
