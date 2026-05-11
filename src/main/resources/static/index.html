@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minigram</title>
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1925,62 +1924,52 @@
 
     function connectWebSocket() {
         console.log('Attempting to connect WebSocket...');
-        // Don't try to connect if we don't have a token
         if (!token) {
             console.log('No token available, cannot connect WebSocket');
             updateWsStatus('disconnected');
             return;
         }
-        
+
         const wsProto = baseUrl.startsWith('https') ? 'wss' : 'ws';
         const wsHost = baseUrl.replace(/^https?:\/\//, '');
         const wsUrl = `${wsProto}://${wsHost}/ws?token=${encodeURIComponent(token)}`;
         console.log('WebSocket URL:', wsUrl);
 
-        stompClient = new StompJs.Client({
-            webSocketFactory: () => new WebSocket(wsUrl),
-            reconnectDelay: 5000,
-            debug: (msg) => console.log('[STOMP]', msg),
-        });
+        const ws = new WebSocket(wsUrl);
+        let reconnectTimer = null;
 
-        stompClient.onConnect = () => {
-            console.log('WebSocket connected successfully');
-            updateWsStatus('connected');
-            logEvent('CONNECTED', 'WebSocket connection established');
-            try {
-                stompClient.subscribe('/user/queue/events', (frame) => {
-                    console.log('Received event:', frame.body);
-                    handleEvent(JSON.parse(frame.body));
-                });
-            } catch (e) {
-                console.error('Error subscribing to events:', e);
+        stompClient = {
+            deactivate() {
+                if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+                ws.onclose = null;
+                ws.close();
             }
         };
 
-        stompClient.onStompError = (frame) => {
-            console.error('STOMP error:', frame);
-            updateWsStatus('error');
-            logEvent('ERROR', frame.headers?.message || 'STOMP error');
+        ws.onopen = () => {
+            console.log('WebSocket connected successfully');
+            updateWsStatus('connected');
+            logEvent('CONNECTED', 'WebSocket connection established');
         };
 
-        stompClient.onWebSocketClose = () => {
+        ws.onmessage = (evt) => {
+            console.log('Received event:', evt.data);
+            try { handleEvent(JSON.parse(evt.data)); } catch (e) { console.error('Error parsing event:', e); }
+        };
+
+        ws.onclose = () => {
             console.log('WebSocket connection closed');
             updateWsStatus('disconnected');
             logEvent('DISCONNECTED', 'Connection closed');
+            if (token) {
+                reconnectTimer = setTimeout(() => { if (token) connectWebSocket(); }, 5000);
+            }
         };
 
-        stompClient.onWebSocketError = (evt) => {
+        ws.onerror = (evt) => {
             console.error('WebSocket error:', evt);
             updateWsStatus('error');
         };
-
-        try {
-            console.log('Activating STOMP client');
-            stompClient.activate();
-        } catch (e) {
-            console.error('Error activating websocket:', e);
-            updateWsStatus('error');
-        }
     }
 
     function updateWsStatus(status) {
