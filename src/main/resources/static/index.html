@@ -2106,7 +2106,7 @@
         // Load profile
         await loadProfile();
         updateSidebarUser();
-        await initCrypto();
+        if (userProfile) await initCrypto();
 
         if (isNewRegistration && !userProfile) {
             // New user without profile — show creation modal first,
@@ -2169,6 +2169,7 @@
             updateSidebarUser();
             hideModal('create-profile-modal');
             toast('Profile created', 'success');
+            await initCrypto();
 
             // Now that the profile exists, initialize WebSocket and load data
             connectWebSocket();
