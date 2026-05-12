@@ -13,10 +13,13 @@ on:
 
 jobs:
   build:
+    name: Build & Push
     runs-on: blacksmith-4vcpu-ubuntu-2404
+
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
