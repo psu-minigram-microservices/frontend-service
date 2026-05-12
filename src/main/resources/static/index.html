@@ -1640,6 +1640,144 @@
     let messages = [];
     let profilesCache = [];
 
+    // ── E2E Crypto ──
+
+    let myPrivateKey  = null;   // CryptoKey stored in IndexedDB
+    let myPublicKeyB64 = '';    // base64-SPKI of own public key
+
+    async function openKeyStore() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('minigram-keystore', 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore('keys');
+            req.onsuccess  = e => resolve(e.target.result);
+            req.onerror    = e => reject(e.target.error);
+        });
+    }
+
+    async function saveKeyToDb(name, key) {
+        const db = await openKeyStore();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('keys', 'readwrite');
+            tx.objectStore('keys').put(key, name);
+            tx.oncomplete = resolve;
+            tx.onerror    = e => reject(e.target.error);
+        });
+    }
+
+    async function loadKeyFromDb(name) {
+        const db = await openKeyStore();
+        return new Promise((resolve, reject) => {
+            const tx  = db.transaction('keys', 'readonly');
+            const req = tx.objectStore('keys').get(name);
+            req.onsuccess = e => resolve(e.target.result || null);
+            req.onerror   = e => reject(e.target.error);
+        });
+    }
+
+    function toBase64(buf) {
+        return btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer)));
+    }
+
+    function fromBase64(b64) {
+        return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    }
+
+    async function exportPublicKeyB64(publicKey) {
+        const spki = await crypto.subtle.exportKey('spki', publicKey);
+        return toBase64(spki);
+    }
+
+    async function importPublicKeyFromB64(b64) {
+        return crypto.subtle.importKey(
+            'spki', fromBase64(b64).buffer,
+            { name: 'ECDH', namedCurve: 'P-256' },
+            true, []
+        );
+    }
+
+    async function deriveAesKey(privateKey, contactPublicKey) {
+        const shared = await crypto.subtle.deriveBits(
+            { name: 'ECDH', public: contactPublicKey }, privateKey, 256
+        );
+        const saltBuf  = new TextEncoder().encode('minigram-e2e-v1');
+        const hkdfKey  = await crypto.subtle.importKey('raw', shared, 'HKDF', false, ['deriveKey']);
+        return crypto.subtle.deriveKey(
+            { name: 'HKDF', hash: 'SHA-256', salt: saltBuf, info: new ArrayBuffer(0) },
+            hkdfKey,
+            { name: 'AES-GCM', length: 256 },
+            false, ['encrypt', 'decrypt']
+        );
+    }
+
+    async function encryptMessage(plaintext, contactPubKeyB64) {
+        const contactKey = await importPublicKeyFromB64(contactPubKeyB64);
+        const aesKey     = await deriveAesKey(myPrivateKey, contactKey);
+        const iv         = crypto.getRandomValues(new Uint8Array(12));
+        const cipher     = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv }, aesKey, new TextEncoder().encode(plaintext)
+        );
+        const result = new Uint8Array(12 + cipher.byteLength);
+        result.set(iv, 0);
+        result.set(new Uint8Array(cipher), 12);
+        return toBase64(result);
+    }
+
+    async function decryptMessage(b64Content, contactPubKeyB64) {
+        const contactKey = await importPublicKeyFromB64(contactPubKeyB64);
+        const aesKey     = await deriveAesKey(myPrivateKey, contactKey);
+        const raw        = fromBase64(b64Content);
+        const iv         = raw.slice(0, 12);
+        const cipher     = raw.slice(12);
+        const plain      = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, cipher);
+        return new TextDecoder().decode(plain);
+    }
+
+    async function getFingerprint(myPubB64, contactPubB64) {
+        const sorted  = [myPubB64, contactPubB64].sort();
+        const data    = new TextEncoder().encode(sorted[0] + '|' + sorted[1]);
+        const digest  = await crypto.subtle.digest('SHA-256', data);
+        const hex     = Array.from(new Uint8Array(digest))
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+        return hex.match(/.{10}/g).join(' ');
+    }
+
+    async function deriveBackupKey(password, salt) {
+        const material = await crypto.subtle.importKey(
+            'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+        );
+        return crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt, iterations: 600_000, hash: 'SHA-256' },
+            material,
+            { name: 'AES-GCM', length: 256 },
+            false, ['encrypt', 'decrypt']
+        );
+    }
+
+    async function encryptPrivateKey(password) {
+        const salt       = crypto.getRandomValues(new Uint8Array(16));
+        const iv         = crypto.getRandomValues(new Uint8Array(12));
+        const backupKey  = await deriveBackupKey(password, salt);
+        const jwk        = await crypto.subtle.exportKey('jwk', myPrivateKey);
+        const ciphertext = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv }, backupKey,
+            new TextEncoder().encode(JSON.stringify(jwk))
+        );
+        return {
+            salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(ciphertext)
+        };
+    }
+
+    async function decryptPrivateKey(password, salt, iv, ciphertext) {
+        const backupKey = await deriveBackupKey(password, fromBase64(salt));
+        const plain = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: fromBase64(iv) }, backupKey, fromBase64(ciphertext)
+        );
+        const jwk = JSON.parse(new TextDecoder().decode(plain));
+        return crypto.subtle.importKey(
+            'jwk', jwk, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']
+        );
+    }
+
     // ── Auth ──
 
     function parseJwt(t) {
