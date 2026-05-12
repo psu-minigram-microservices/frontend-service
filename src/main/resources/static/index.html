@@ -552,6 +552,49 @@
 
         .sidebar-actions .btn { flex: 1; }
 
+        .key-menu-wrap {
+            position: relative;
+        }
+
+        .key-menu-wrap > .btn {
+            flex: none;
+            width: 36px;
+            padding: 9px 0;
+            font-size: 15px;
+        }
+
+        .key-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            min-width: 170px;
+            z-index: 200;
+            overflow: hidden;
+        }
+
+        .key-menu.open { display: block; }
+
+        .key-menu button {
+            display: block;
+            width: 100%;
+            padding: 10px 14px;
+            text-align: left;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: var(--font-ui);
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .key-menu button:hover { background: var(--bg-hover); }
+
         /* ── Sidebar Tabs ── */
         .sidebar-tabs {
             display: flex;
@@ -1339,12 +1382,15 @@
                 <button class="btn btn-primary btn-sm" onclick="showCreateChatModal()">New Chat</button>
                 <button class="btn btn-ghost btn-sm" onclick="refresh()">Refresh</button>
                 <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
-                <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:13px"
-                        onclick="showExportKeyModal()">Export encryption key</button>
-                <button class="btn btn-secondary" style="width:100%;margin-top:4px;font-size:13px"
-                        onclick="document.getElementById('import-key-file').click()">Import encryption key</button>
-                <input type="file" id="import-key-file" accept=".mgkey" style="display:none"
-                       onchange="handleImportKey(this.files[0])">
+                <div class="key-menu-wrap">
+                    <button class="btn btn-ghost btn-sm" onclick="toggleKeyMenu()" title="Encryption keys">🔑</button>
+                    <div class="key-menu" id="key-menu">
+                        <button onclick="showExportKeyModal(); closeKeyMenu()">Export key</button>
+                        <button onclick="document.getElementById('import-key-file').click(); closeKeyMenu()">Import key</button>
+                    </div>
+                    <input type="file" id="import-key-file" accept=".mgkey" style="display:none"
+                           onchange="handleImportKey(this.files[0])">
+                </div>
             </div>
             <div class="sidebar-tabs">
                 <button class="sidebar-tab active" onclick="switchSidebarTab('chats')">Chats</button>
@@ -1843,6 +1889,12 @@
                 const pubStored = await loadKeyFromDb('publicKey');
                 myPublicKeyB64  = await exportPublicKeyB64(pubStored);
                 console.log('E2E: restored keys from IndexedDB');
+                // Re-upload public key if server doesn't have it yet
+                const existing = await api('GET', `/api/v1/keys/${userId}`).catch(() => null);
+                if (!existing) {
+                    await api('PUT', '/api/v1/keys', { public_key: myPublicKeyB64 });
+                    console.log('E2E: re-uploaded public key to server');
+                }
                 return;
             }
             // No keys locally — check server for backup BEFORE generating new keys
@@ -2183,6 +2235,14 @@
         disconnect();
     }
 
+    function toggleKeyMenu() {
+        document.getElementById('key-menu').classList.toggle('open');
+    }
+
+    function closeKeyMenu() {
+        document.getElementById('key-menu').classList.remove('open');
+    }
+
     function disconnect() {
         if (stompClient) { stompClient.deactivate(); stompClient = null; }
         currentChatId = null;
@@ -2501,7 +2561,7 @@
         }
 
         const rendered = await Promise.all(messages.map(async m => {
-            const isOwn = m.sender.profile_id === userId;
+            const isOwn = m.sender.profile_id === userProfile?.id;
             let displayContent = esc(m.content);
             let lockIcon = '';
 
@@ -2522,16 +2582,16 @@
                 lockIcon = '<span title="Not encrypted" style="color:var(--text-tertiary);font-size:11px">&#x1F513;</span>';
             }
 
-            return `<div class="message-item ${isOwn ? 'own' : 'other'}">
-                <div class="message-bubble">
+            return `<div class="message ${isOwn ? 'own' : 'other'}">
                     <div class="message-sender">${esc(m.sender.name)}</div>
-                    <div class="message-text">${displayContent} ${lockIcon}</div>
-                    <div class="message-time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                    <div class="message-content">${displayContent} ${lockIcon}</div>
+                    <div class="message-footer">
+                        <span class="message-time">${new Date(m.created_at).toLocaleTimeString()}</span>
+                    </div>
                     ${isOwn ? `<div class="message-actions">
                         <button class="message-action-btn" onclick="showEditMessageModal(${m.id}, '${escAttr(m.content)}')">edit</button>
                         <button class="message-action-btn" onclick="deleteMessage(${m.id})">del</button>
                     </div>` : ''}
-                </div>
             </div>`;
         }));
 
@@ -3165,6 +3225,10 @@
 
     // Init — set default server URL to current host
     document.getElementById('base-url').value = window.location.origin;
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.key-menu-wrap')) closeKeyMenu();
+    });
 </script>
 
 <!-- Restore Key Modal (new device with existing backup) -->
