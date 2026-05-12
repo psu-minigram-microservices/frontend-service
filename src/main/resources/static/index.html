@@ -1890,7 +1890,7 @@
                 myPublicKeyB64  = await exportPublicKeyB64(pubStored);
                 console.log('E2E: restored keys from IndexedDB');
                 // Re-upload public key if server doesn't have it yet
-                const existing = await api('GET', `/api/v1/keys/${userId}`).catch(() => null);
+                const existing = await api('GET', `/api/v1/keys/${userProfile?.id || userId}`).catch(() => null);
                 if (!existing) {
                     await api('PUT', '/api/v1/keys', { public_key: myPublicKeyB64 });
                     console.log('E2E: re-uploaded public key to server');
