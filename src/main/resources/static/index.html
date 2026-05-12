@@ -2426,7 +2426,7 @@
     async function loadChats() {
         try {
             const data = await api('GET', '/api/v1/chats?size=100');
-            chats = data.content || [];
+            chats = data?.content || [];
             renderChatList();
         } catch (e) { toast('Failed to load chats: ' + e.message, 'error'); }
     }
@@ -2439,7 +2439,7 @@
         }
         list.innerHTML = chats.map(c => {
             const name = chatDisplayName(c);
-            const meta = c.type === 'group'
+            const meta = c.type === 'GROUP'
                 ? `${c.members ? c.members.length + ' members' : ''} &middot; #${c.id}`
                 : `#${c.id}`;
             return `
@@ -2454,8 +2454,8 @@
     }
 
     function chatDisplayName(chat) {
-        if (chat.type === 'saved') return 'Saved Messages';
-        if (chat.type === 'direct') {
+        if (chat.type === 'SAVED') return 'Saved Messages';
+        if (chat.type === 'DIRECT') {
             const other = chat.members?.find(m => m.profile_id !== userProfile?.id);
             return other?.name || other?.profile_id || 'Direct Chat';
         }
@@ -2473,7 +2473,7 @@
         document.getElementById('chat-meta').textContent = `#${id} \u00b7 ${type}`;
 
         // Adapt header actions to chat type
-        const isGroup = type === 'group';
+        const isGroup = type === 'GROUP';
         const isOwner = chat?.owner_id === userProfile?.id;
         document.getElementById('btn-members').style.display = isGroup ? '' : 'none';
         document.getElementById('btn-edit-chat').style.display = isGroup ? '' : 'none';
@@ -2530,7 +2530,7 @@
         if (!currentChatId) return;
         try {
             const data = await api('GET', `/api/v1/chats/${currentChatId}/messages?size=100`);
-            messages = (data.content || []).reverse();
+            messages = (data?.content || []).reverse();
             await renderMessages();
         } catch (e) { toast('Failed to load messages: ' + e.message, 'error'); }
     }
@@ -2662,7 +2662,7 @@
         if (!currentChatId) return;
         try {
             const data = await api('GET', `/api/v1/chats/${currentChatId}/members?size=100`);
-            renderMembers(data.content || []);
+            renderMembers(data?.content || []);
         } catch (e) { toast('Failed to load members: ' + e.message, 'error'); }
     }
 
@@ -2707,7 +2707,7 @@
         const type = document.getElementById('new-chat-type').value;
         const title = document.getElementById('new-chat-title').value.trim();
         const membersRaw = document.getElementById('new-chat-members').value.trim();
-        const body = { type: type.toLowerCase() };
+        const body = { type };
         if (title) body.title = title;
         if (membersRaw) body.member_ids = membersRaw.split(',').map(s => s.trim()).filter(Boolean);
         try {
@@ -2874,7 +2874,8 @@
     async function replyContactInvite(senderId, status) {
         try {
             await api('POST', `/api/v1/profiles/relations/reply/${senderId}?status=${status}`);
-            toast(`Invite ${status.toLowerCase()}`, 'success');
+            const replyLabel = { 0: 'accepted', 1: 'rejected', 2: 'blocked' }[status] ?? 'updated';
+            toast(`Invite ${replyLabel}`, 'success');
             loadContacts();
             loadProfilesCache();
         } catch (e) { toast('Reply failed: ' + e.message, 'error'); }
