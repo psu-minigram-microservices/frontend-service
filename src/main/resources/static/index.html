@@ -2404,46 +2404,109 @@
         try {
             const data = await api('GET', `/api/v1/chats/${currentChatId}/messages?size=100`);
             messages = (data.content || []).reverse();
-            renderMessages();
+            await renderMessages();
         } catch (e) { toast('Failed to load messages: ' + e.message, 'error'); }
     }
 
-    function renderMessages() {
+    async function renderMessages() {
         const area = document.getElementById('messages-area');
         if (!messages.length) {
             area.innerHTML = '<div class="messages-empty">No messages yet. Say hello!</div>';
             return;
         }
-        area.innerHTML = messages.map(m => {
-            const own = m.sender?.profile_id === userProfile?.id;
-            const edited = m.updated_at && m.updated_at !== m.created_at;
-            return `
-                <div class="message ${own ? 'own' : 'other'}" id="msg-${m.id}">
-                    ${!own ? `<div class="message-sender">${esc(m.sender?.name || shortId(m.sender?.profile_id))}</div>` : ''}
-                    <div class="message-content">${esc(m.content)}</div>
-                    <div class="message-footer">
-                        <span class="message-time">${fmtTime(m.created_at)}</span>
-                        ${edited ? '<span class="message-edited-badge">edited</span>' : ''}
-                    </div>
-                    ${own ? `
-                        <div class="message-actions">
-                            <button class="message-action-btn" onclick="showEditMessageModal(${m.id}, '${escAttr(m.content)}')">edit</button>
-                            <button class="message-action-btn" onclick="deleteMessage(${m.id})">del</button>
-                        </div>
-                    ` : ''}
-                </div>`;
-        }).join('');
+
+        const chat         = chats.find(c => c.id === currentChatId);
+        const isDirect     = chat?.type === 'direct';
+        const contactMember = isDirect
+            ? chat?.members.find(m => m.profile_id !== userId)
+            : null;
+
+        // Attempt to get contact key once (silently)
+        let contactPubKeyB64 = null;
+        if (isDirect && contactMember && myPrivateKey) {
+            const pins = getPins();
+            contactPubKeyB64 = pins[contactMember.profile_id] || null;
+            if (!contactPubKeyB64) {
+                try {
+                    contactPubKeyB64 = await getContactKey(contactMember.profile_id);
+                } catch { /* no key available */ }
+            }
+        }
+
+        const rendered = await Promise.all(messages.map(async m => {
+            const isOwn = m.sender.profile_id === userId;
+            let displayContent = esc(m.content);
+            let lockIcon = '';
+
+            if (m.encrypted) {
+                if (contactPubKeyB64 && myPrivateKey) {
+                    try {
+                        displayContent = esc(await decryptMessage(m.content, contactPubKeyB64));
+                        lockIcon = '<span title="End-to-end encrypted" style="color:var(--success);font-size:11px">&#x1F512;</span>';
+                    } catch {
+                        displayContent = '<em style="color:var(--text-tertiary)">[could not decrypt]</em>';
+                        lockIcon = '<span title="Decryption failed" style="color:var(--warning);font-size:11px">&#x26A0;</span>';
+                    }
+                } else {
+                    displayContent = '<em style="color:var(--text-tertiary)">[encrypted]</em>';
+                    lockIcon = '<span title="Encrypted" style="color:var(--text-tertiary);font-size:11px">&#x1F512;</span>';
+                }
+            } else if (isDirect) {
+                lockIcon = '<span title="Not encrypted" style="color:var(--text-tertiary);font-size:11px">&#x1F513;</span>';
+            }
+
+            return `<div class="message-item ${isOwn ? 'own' : 'other'}">
+                <div class="message-bubble">
+                    <div class="message-sender">${esc(m.sender.name)}</div>
+                    <div class="message-text">${displayContent} ${lockIcon}</div>
+                    <div class="message-time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                    ${isOwn ? `<div class="message-actions">
+                        <button class="message-action-btn" onclick="showEditMessageModal(${m.id}, '${escAttr(m.content)}')">edit</button>
+                        <button class="message-action-btn" onclick="deleteMessage(${m.id})">del</button>
+                    </div>` : ''}
+                </div>
+            </div>`;
+        }));
+
+        area.innerHTML = rendered.join('');
         area.scrollTop = area.scrollHeight;
     }
 
     async function sendMessage() {
         if (!currentChatId) return;
-        const input = document.getElementById('message-input');
+        const input   = document.getElementById('message-input');
         const content = input.value.trim();
         if (!content) return;
+        input.value = '';
+
+        const chat     = chats.find(c => c.id === currentChatId);
+        const isDirect = chat?.type === 'direct';
+
         try {
-            input.value = '';
-            await api('POST', `/api/v1/chats/${currentChatId}/messages`, { content });
+            if (isDirect && myPrivateKey) {
+                const contactMember = chat.members.find(m => m.profile_id !== userId);
+                if (!contactMember) throw new Error('Contact not found in chat');
+                const contactId = contactMember.profile_id;
+
+                let contactPubKeyB64;
+                try {
+                    contactPubKeyB64 = await getContactKey(contactId);
+                } catch (e) {
+                    // Contact has no key yet — confirm plaintext send
+                    if (!confirm('This contact has not set up encryption yet. Send as plain text?')) {
+                        input.value = content;
+                        return;
+                    }
+                    await api('POST', `/api/v1/chats/${currentChatId}/messages`, { content });
+                    return;
+                }
+
+                const encrypted = await encryptMessage(content, contactPubKeyB64);
+                await api('POST', `/api/v1/chats/${currentChatId}/messages`,
+                    { content: encrypted, encrypted: true });
+            } else {
+                await api('POST', `/api/v1/chats/${currentChatId}/messages`, { content });
+            }
         } catch (e) {
             toast('Send failed: ' + e.message, 'error');
             input.value = content;
