@@ -1778,6 +1778,117 @@
         );
     }
 
+    // ── Key Pinning ──
+
+    function getPins() {
+        try { return JSON.parse(localStorage.getItem('minigram-key-pins') || '{}'); }
+        catch { return {}; }
+    }
+
+    function savePin(uid, pubKeyB64) {
+        const pins = getPins(); pins[uid] = pubKeyB64;
+        localStorage.setItem('minigram-key-pins', JSON.stringify(pins));
+    }
+
+    async function getContactKey(contactUserId) {
+        const data      = await api('GET', `/api/v1/keys/${contactUserId}`);
+        const fetched   = data.public_key;
+        const pins      = getPins();
+        const pinned    = pins[contactUserId];
+        if (!pinned) {
+            savePin(contactUserId, fetched);
+        } else if (pinned !== fetched) {
+            const accepted = await showMitmWarningModal(contactUserId, pinned, fetched);
+            if (!accepted) throw new Error('MITM suspected — message not sent');
+            savePin(contactUserId, fetched);
+            localStorage.removeItem(`minigram-verified-${contactUserId}`);
+        }
+        return fetched;
+    }
+
+    // ── Key Init & Backup ──
+
+    async function initCrypto() {
+        try {
+            const stored = await loadKeyFromDb('privateKey');
+            if (stored) {
+                myPrivateKey    = stored;
+                const pubStored = await loadKeyFromDb('publicKey');
+                myPublicKeyB64  = await exportPublicKeyB64(pubStored);
+                console.log('E2E: restored keys from IndexedDB');
+                return;
+            }
+            // No keys locally — check server for backup BEFORE generating new keys
+            const backup = await api('GET', '/api/v1/keys/backup').catch(() => null);
+            if (backup) {
+                // Existing backup found — prompt restore instead of generating new keys
+                console.log('E2E: backup found on server, showing restore modal');
+                showModal('restore-key-modal');
+                return;   // keys will be set after user submits restore modal
+            }
+            // Fresh user — generate new key pair
+            await generateAndUploadKeys();
+        } catch (e) {
+            console.error('E2E init failed:', e);
+        }
+    }
+
+    async function generateAndUploadKeys() {
+        const kp = await crypto.subtle.generateKey(
+            { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']
+        );
+        myPrivateKey   = kp.privateKey;
+        myPublicKeyB64 = await exportPublicKeyB64(kp.publicKey);
+        await saveKeyToDb('privateKey', kp.privateKey);
+        await saveKeyToDb('publicKey',  kp.publicKey);
+        await api('PUT', '/api/v1/keys', { public_key: myPublicKeyB64 });
+        console.log('E2E: generated and uploaded new key pair');
+        showModal('backup-password-modal');
+    }
+
+    async function backupToServer(password) {
+        const { salt, iv, ciphertext } = await encryptPrivateKey(password);
+        await api('PUT', '/api/v1/keys/backup', { salt, iv, ciphertext });
+    }
+
+    async function tryRestoreFromServer(password) {
+        const data = await api('GET', '/api/v1/keys/backup').catch(() => null);
+        if (!data) return false;
+        myPrivateKey = await decryptPrivateKey(password, data.salt, data.iv, data.ciphertext);
+        await saveKeyToDb('privateKey', myPrivateKey);
+        // Fetch own public key from server to populate myPublicKeyB64
+        const keyData = await api('GET', `/api/v1/keys/${userId}`).catch(() => null);
+        if (keyData) {
+            myPublicKeyB64 = keyData.public_key;
+            const pubCryptoKey = await importPublicKeyFromB64(myPublicKeyB64);
+            await saveKeyToDb('publicKey', pubCryptoKey);
+        }
+        return true;
+    }
+
+    async function exportKeyFile(password) {
+        const blob = await encryptPrivateKey(password);
+        const file = new Blob([JSON.stringify(blob)], { type: 'application/json' });
+        const url  = URL.createObjectURL(file);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'minigram-key.mgkey'; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function importKeyFile(file, password) {
+        const text = await file.text();
+        const { salt, iv, ciphertext } = JSON.parse(text);
+        myPrivateKey = await decryptPrivateKey(password, salt, iv, ciphertext);
+        await saveKeyToDb('privateKey', myPrivateKey);
+        const keyData = await api('GET', `/api/v1/keys/${userId}`).catch(() => null);
+        if (keyData) {
+            myPublicKeyB64 = keyData.public_key;
+            const pubCryptoKey = await importPublicKeyFromB64(myPublicKeyB64);
+            await saveKeyToDb('publicKey', pubCryptoKey);
+        }
+        toast('Key imported successfully', 'success');
+    }
+
     // ── Auth ──
 
     function parseJwt(t) {
@@ -1968,6 +2079,7 @@
         // Load profile
         await loadProfile();
         updateSidebarUser();
+        await initCrypto();
 
         if (isNewRegistration && !userProfile) {
             // New user without profile — show creation modal first,
@@ -2786,6 +2898,58 @@
     function hideModal(id) { document.getElementById(id).classList.remove('show'); }
     function toggleMembers() { document.getElementById('members-panel').classList.toggle('show'); }
 
+    async function submitRestoreKey() {
+        const pwd = document.getElementById('restore-pwd').value;
+        if (!pwd) { toast('Enter your backup password', 'error'); return; }
+        try {
+            const ok = await tryRestoreFromServer(pwd);
+            if (ok) {
+                hideModal('restore-key-modal');
+                document.getElementById('restore-pwd').value = '';
+                toast('Encryption keys restored successfully', 'success');
+            } else {
+                toast('No backup found', 'error');
+            }
+        } catch (e) {
+            toast('Restore failed — wrong password?', 'error');
+        }
+    }
+
+    async function skipRestoreKey() {
+        hideModal('restore-key-modal');
+        await generateAndUploadKeys();
+    }
+
+    let mitmResolve = null;
+
+    async function showMitmWarningModal(contactId, oldKey, newKey) {
+        return new Promise(resolve => {
+            mitmResolve = resolve;
+            document.getElementById('mitm-warning-detail').textContent =
+                `Contact ID: ${contactId.slice(0,8)}... Old key: ${oldKey.slice(0,16)}... New key: ${newKey.slice(0,16)}...`;
+            showModal('mitm-warning-modal');
+        });
+    }
+
+    function resolveMitmWarning(accepted) {
+        hideModal('mitm-warning-modal');
+        if (mitmResolve) { mitmResolve(accepted); mitmResolve = null; }
+    }
+
+    async function submitBackupPassword() {
+        const p1 = document.getElementById('backup-pwd-1').value;
+        const p2 = document.getElementById('backup-pwd-2').value;
+        if (p1.length < 8)  { toast('Password must be at least 8 characters', 'error'); return; }
+        if (p1 !== p2)      { toast('Passwords do not match', 'error'); return; }
+        try {
+            await backupToServer(p1);
+            hideModal('backup-password-modal');
+            toast('Encryption key backed up successfully', 'success');
+        } catch (e) {
+            toast('Backup failed: ' + e.message, 'error');
+        }
+    }
+
     // ── Member Helpers ──
 
     function appendMember(uuid) {
@@ -2850,5 +3014,67 @@
     // Init — set default server URL to current host
     document.getElementById('base-url').value = window.location.origin;
 </script>
+
+<!-- Restore Key Modal (new device with existing backup) -->
+<div class="modal-overlay" id="restore-key-modal" style="display:none">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <span class="modal-title">Restore Encryption Keys</span>
+        </div>
+        <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px">
+            An encrypted key backup was found on the server. Enter your backup password to restore access to your encrypted messages.
+        </p>
+        <div class="field-group">
+            <label class="field-label">Backup password</label>
+            <input class="field-input" type="password" id="restore-pwd" placeholder="Enter backup password">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-block" onclick="submitRestoreKey()">Restore</button>
+            <button class="btn btn-secondary" onclick="skipRestoreKey()">Generate new keys</button>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Password Modal -->
+<div class="modal-overlay" id="backup-password-modal" style="display:none">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <span class="modal-title">Set Backup Password</span>
+            <button class="modal-close" onclick="hideModal('backup-password-modal')">&#x2715;</button>
+        </div>
+        <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px">
+            Set a password to back up your encryption key. You will need this to restore messages on a new device.
+        </p>
+        <div class="field-group">
+            <label class="field-label">Password</label>
+            <input class="field-input" type="password" id="backup-pwd-1" placeholder="Min 8 characters">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Confirm password</label>
+            <input class="field-input" type="password" id="backup-pwd-2" placeholder="Repeat password">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-block" onclick="submitBackupPassword()">Save backup</button>
+            <button class="btn btn-secondary" onclick="hideModal('backup-password-modal')">Skip</button>
+        </div>
+    </div>
+</div>
+
+<!-- MITM Warning Modal -->
+<div class="modal-overlay" id="mitm-warning-modal" style="display:none">
+    <div class="modal" style="max-width:460px">
+        <div class="modal-header">
+            <span class="modal-title" style="color:var(--danger)">&#x26A0; Security Warning</span>
+        </div>
+        <p style="color:var(--text-secondary);font-size:14px;margin-bottom:12px">
+            The encryption key for this contact has changed. This may indicate a MITM attack or the contact switched devices.
+        </p>
+        <p style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px" id="mitm-warning-detail"></p>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-danger" onclick="resolveMitmWarning(true)">Accept new key</button>
+            <button class="btn btn-secondary" onclick="resolveMitmWarning(false)">Cancel</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
