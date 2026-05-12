@@ -1075,6 +1075,37 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            transition: color var(--transition), background var(--transition);
+            flex-shrink: 0;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
         .modal h3 {
             font-size: 18px;
             font-weight: 600;
@@ -1883,10 +1914,10 @@
 
     async function initCrypto() {
         try {
-            const stored = await loadKeyFromDb('privateKey');
+            const stored = await loadKeyFromDb(`${userId}_privateKey`);
             if (stored) {
                 myPrivateKey    = stored;
-                const pubStored = await loadKeyFromDb('publicKey');
+                const pubStored = await loadKeyFromDb(`${userId}_publicKey`);
                 myPublicKeyB64  = await exportPublicKeyB64(pubStored);
                 console.log('E2E: restored keys from IndexedDB');
                 // Re-upload public key if server doesn't have it yet
@@ -1918,8 +1949,8 @@
         );
         myPrivateKey   = kp.privateKey;
         myPublicKeyB64 = await exportPublicKeyB64(kp.publicKey);
-        await saveKeyToDb('privateKey', kp.privateKey);
-        await saveKeyToDb('publicKey',  kp.publicKey);
+        await saveKeyToDb(`${userId}_privateKey`, kp.privateKey);
+        await saveKeyToDb(`${userId}_publicKey`,  kp.publicKey);
         await api('PUT', '/api/v1/keys', { public_key: myPublicKeyB64 });
         console.log('E2E: generated and uploaded new key pair');
         showModal('backup-password-modal');
@@ -1934,13 +1965,13 @@
         const data = await api('GET', '/api/v1/keys/backup').catch(() => null);
         if (!data) return false;
         myPrivateKey = await decryptPrivateKey(password, data.salt, data.iv, data.ciphertext);
-        await saveKeyToDb('privateKey', myPrivateKey);
+        await saveKeyToDb(`${userId}_privateKey`, myPrivateKey);
         // Fetch own public key from server to populate myPublicKeyB64
-        const keyData = await api('GET', `/api/v1/keys/${userId}`).catch(() => null);
+        const keyData = await api('GET', `/api/v1/keys/${userProfile?.id || userId}`).catch(() => null);
         if (keyData) {
             myPublicKeyB64 = keyData.public_key;
             const pubCryptoKey = await importPublicKeyFromB64(myPublicKeyB64);
-            await saveKeyToDb('publicKey', pubCryptoKey);
+            await saveKeyToDb(`${userId}_publicKey`, pubCryptoKey);
         }
         return true;
     }
@@ -1958,12 +1989,12 @@
         const text = await file.text();
         const { salt, iv, ciphertext } = JSON.parse(text);
         myPrivateKey = await decryptPrivateKey(password, salt, iv, ciphertext);
-        await saveKeyToDb('privateKey', myPrivateKey);
-        const keyData = await api('GET', `/api/v1/keys/${userId}`).catch(() => null);
+        await saveKeyToDb(`${userId}_privateKey`, myPrivateKey);
+        const keyData = await api('GET', `/api/v1/keys/${userProfile?.id || userId}`).catch(() => null);
         if (keyData) {
             myPublicKeyB64 = keyData.public_key;
             const pubCryptoKey = await importPublicKeyFromB64(myPublicKeyB64);
-            await saveKeyToDb('publicKey', pubCryptoKey);
+            await saveKeyToDb(`${userId}_publicKey`, pubCryptoKey);
         }
         toast('Key imported successfully', 'success');
     }
@@ -2123,6 +2154,7 @@
             token = data.accessToken;
             refreshTokenValue = data.refreshToken;
             userId = parseJwt(token).sub;
+            saveAuthTokens(token, refreshTokenValue);
             await enterMainScreen(true);
         } catch (e) {
             showAuthError(e.message);
@@ -2490,7 +2522,7 @@
             const openedChat = chats.find(c => c.id === id);
             const isDirectChat = openedChat?.type === 'direct';
             if (isDirectChat && myPublicKeyB64) {
-                const contactMember = openedChat?.members.find(m => m.profile_id !== userId);
+                const contactMember = openedChat?.members.find(m => m.profile_id !== userProfile?.id);
                 if (contactMember) {
                     const pins = getPins();
                     const contactKey = pins[contactMember.profile_id];
@@ -2513,7 +2545,7 @@
 
     function toggleVerified() {
         const chat = chats.find(c => c.id === currentChatId);
-        const contactMember = chat?.members.find(m => m.profile_id !== userId);
+        const contactMember = chat?.members.find(m => m.profile_id !== userProfile?.id);
         if (!contactMember) return;
         const key = `minigram-verified-${contactMember.profile_id}`;
         if (document.getElementById('verified-checkbox').checked) {
@@ -2545,7 +2577,7 @@
         const chat         = chats.find(c => c.id === currentChatId);
         const isDirect     = chat?.type === 'direct';
         const contactMember = isDirect
-            ? chat?.members.find(m => m.profile_id !== userId)
+            ? chat?.members.find(m => m.profile_id !== userProfile?.id)
             : null;
 
         // Attempt to get contact key once (silently)
@@ -2611,7 +2643,7 @@
 
         try {
             if (isDirect && myPrivateKey) {
-                const contactMember = chat.members.find(m => m.profile_id !== userId);
+                const contactMember = chat.members.find(m => m.profile_id !== userProfile?.id);
                 if (!contactMember) throw new Error('Contact not found in chat');
                 const contactId = contactMember.profile_id;
 
@@ -2874,7 +2906,7 @@
     async function replyContactInvite(senderId, status) {
         try {
             await api('POST', `/api/v1/profiles/relations/reply/${senderId}?status=${status}`);
-            toast(`Invite ${status.toLowerCase()}`, 'success');
+            toast(`Invite ${(['accepted', 'rejected', 'blocked'][status] ?? status)}`, 'success');
             loadContacts();
             loadProfilesCache();
         } catch (e) { toast('Reply failed: ' + e.message, 'error'); }
