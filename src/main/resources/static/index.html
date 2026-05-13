@@ -1463,12 +1463,8 @@
             <div id="active-chat">
                 <div class="chat-header">
                     <div class="chat-header-info">
-                        <h3 id="chat-title"></h3>
+                        <h3 id="chat-title"><span id="chat-title-name"></span><span id="fingerprint-display" style="display:none;font-weight:400;color:var(--text-secondary);font-size:0.85em"> • <span id="fingerprint-emojis"></span></span></h3>
                         <div class="chat-header-meta" id="chat-meta"></div>
-                        <div id="security-section" style="display:none;margin-top:5px;align-items:center;gap:8px;flex-wrap:wrap">
-                            <span style="font-size:11px;color:var(--text-tertiary)">Отпечаток:</span>
-                            <span id="fingerprint-display" style="font-size:18px;color:var(--text-primary);background:var(--bg-tertiary);padding:2px 8px;border-radius:6px;letter-spacing:2px">—</span>
-                        </div>
                     </div>
                     <div class="chat-header-actions">
                         <button class="btn btn-ghost btn-sm" id="btn-members" onclick="toggleMembers()">Участники</button>
@@ -2500,7 +2496,7 @@
 
         document.getElementById('no-chat').style.display = 'none';
         document.getElementById('active-chat').classList.add('show');
-        document.getElementById('chat-title').textContent = chatDisplayName(chat);
+        document.getElementById('chat-title-name').textContent = chatDisplayName(chat);
         document.getElementById('chat-meta').textContent = `#${id} \u00b7 ${type}`;
 
         // Adapt header actions to chat type
@@ -2515,32 +2511,29 @@
         await loadMessages();
         if (isGroup) await loadMembers();
 
-        // Populate security section for DIRECT chats
-        const secSection = document.getElementById('security-section');
-        if (secSection) {
+        // Show fingerprint inline in title for DIRECT chats
+        const fpDisplay = document.getElementById('fingerprint-display');
+        if (fpDisplay) {
             const openedChat = chats.find(c => c.id === id);
             const isDirectChat = openedChat?.type === 'direct';
+            fpDisplay.style.display = 'none';
             if (isDirectChat && myPublicKeyB64) {
                 const contactMember = openedChat?.members.find(m => m.profile_id !== userProfile?.id);
                 if (contactMember) {
+                    const showFp = fp => {
+                        document.getElementById('fingerprint-emojis').textContent = fp;
+                        fpDisplay.style.display = '';
+                    };
                     const pins = getPins();
                     const contactKey = pins[contactMember.profile_id];
                     if (contactKey) {
-                        getFingerprint(myPublicKeyB64, contactKey).then(fp => {
-                            document.getElementById('fingerprint-display').textContent = fp;
-                        });
-                        secSection.style.display = 'flex';
+                        getFingerprint(myPublicKeyB64, contactKey).then(showFp);
                     } else {
                         getContactKey(contactMember.profile_id).then(key => {
-                            if (key) getFingerprint(myPublicKeyB64, key).then(fp => {
-                                document.getElementById('fingerprint-display').textContent = fp;
-                                secSection.style.display = 'flex';
-                            });
+                            if (key) getFingerprint(myPublicKeyB64, key).then(showFp);
                         }).catch(() => {});
                     }
                 }
-            } else {
-                secSection.style.display = 'none';
             }
         }
     }
@@ -2747,7 +2740,7 @@
             await api('PATCH', `/api/v1/chats/${currentChatId}`, { title });
             hideModal('edit-chat-modal');
             await loadChats();
-            document.getElementById('chat-title').textContent = title;
+            document.getElementById('chat-title-name').textContent = title;
             toast('Чат обновлён', 'success');
         } catch (e) { toast('Ошибка редактирования: ' + e.message, 'error'); }
     }
@@ -3040,7 +3033,7 @@
                     if (idx >= 0) chats[idx] = ev.payload;
                     renderChatList();
                     if (ev.chat_id === currentChatId) {
-                        document.getElementById('chat-title').textContent = chatDisplayName(ev.payload);
+                        document.getElementById('chat-title-name').textContent = chatDisplayName(ev.payload);
                     }
                 }
                 loadChats();
