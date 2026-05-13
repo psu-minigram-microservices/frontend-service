@@ -1467,9 +1467,7 @@
                         <div class="chat-header-meta" id="chat-meta"></div>
                         <div id="security-section" style="display:none;margin-top:5px;align-items:center;gap:8px;flex-wrap:wrap">
                             <span style="font-size:11px;color:var(--text-tertiary)">Отпечаток:</span>
-                            <span id="fingerprint-display" style="font-family:monospace;font-size:11px;color:var(--text-primary);background:var(--bg-tertiary);padding:2px 6px;border-radius:3px">—</span>
-                            <input type="checkbox" id="verified-checkbox" onchange="toggleVerified()">
-                            <label for="verified-checkbox" style="font-size:11px;color:var(--text-secondary);cursor:pointer">Проверено</label>
+                            <span id="fingerprint-display" style="font-size:18px;color:var(--text-primary);background:var(--bg-tertiary);padding:2px 8px;border-radius:6px;letter-spacing:2px">—</span>
                         </div>
                     </div>
                     <div class="chat-header-actions">
@@ -1822,12 +1820,29 @@
     }
 
     async function getFingerprint(myPubB64, contactPubB64) {
-        const sorted  = [myPubB64, contactPubB64].sort();
-        const data    = new TextEncoder().encode(sorted[0] + '|' + sorted[1]);
-        const digest  = await crypto.subtle.digest('SHA-256', data);
-        const hex     = Array.from(new Uint8Array(digest))
-            .map(b => b.toString(16).padStart(2, '0')).join('');
-        return hex.match(/.{10}/g).join(' ');
+        const EMOJI_TABLE = [
+            '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈',
+            '🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛',
+            '🦋','🐌','🐞','🐜','🕷','🦂','🐢','🐍','🦎','🦖','🐙','🦑','🦐','🦞','🦀','🐡',
+            '🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🐘','🦏','🦛','🐪','🐫',
+            '🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈',
+            '🐓','🦃','🦚','🦜','🦢','🕊','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿','🦔',
+            '🌵','🎄','🌲','🌳','🌴','🌱','🌿','☘','🍀','🎍','🎋','🍃','🍂','🍁','🍄','🌾',
+            '💐','🌷','🌹','🥀','🌺','🌸','🌼','🌻','🌞','🌝','🍋','🍊','🍉','🍇','🍓','🍒',
+            '🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶','🌽','🥕','🧄','🧅',
+            '🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖',
+            '🌭','🍔','🍟','🍕','🌮','🌯','🥙','🥗','🥘','🍝','🍜','🍲','🍛','🍣','🍱','🥟',
+            '🍤','🍙','🍚','🍘','🍥','🥮','🍢','🧆','🍡','🥠','🥡','🍦','🍧','🍨','🍩','🍪',
+            '🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','☕','🍵','🍶','🍾','🍷',
+            '🍸','🍹','🍺','🍻','🥂','🥃','🧃','🧉','🧊','🥄','🍴','🍽','🥢','🧂','⚽','🏀',
+            '🏈','⚾','🥎','🎾','🏐','🏉','🥏','🏓','🏸','🥊','🥋','🥅','⛳','🏹','🎣','🤿',
+            '🎽','🎿','🛷','🥌','🎯','🎮','🎲','♟','🎭','🎨','🎬','🎤','🎧','🎼','🎵','🎶',
+        ];
+        const sorted = [myPubB64, contactPubB64].sort();
+        const data   = new TextEncoder().encode(sorted[0] + '|' + sorted[1]);
+        const digest = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(digest)).slice(0, 5)
+            .map(b => EMOJI_TABLE[b]).join('');
     }
 
     async function deriveBackupKey(password, salt) {
@@ -1890,7 +1905,6 @@
             const accepted = await showMitmWarningModal(contactUserId, pinned, fetched);
             if (!accepted) throw new Error('Подозрение на MITM — сообщение не отправлено');
             savePin(contactUserId, fetched);
-            localStorage.removeItem(`minigram-verified-${contactUserId}`);
         }
         return fetched;
     }
@@ -2515,29 +2529,19 @@
                         getFingerprint(myPublicKeyB64, contactKey).then(fp => {
                             document.getElementById('fingerprint-display').textContent = fp;
                         });
-                        const verified = !!localStorage.getItem(`minigram-verified-${contactMember.profile_id}`);
-                        document.getElementById('verified-checkbox').checked = verified;
                         secSection.style.display = 'flex';
                     } else {
-                        secSection.style.display = 'none';
+                        getContactKey(contactMember.profile_id).then(key => {
+                            if (key) getFingerprint(myPublicKeyB64, key).then(fp => {
+                                document.getElementById('fingerprint-display').textContent = fp;
+                                secSection.style.display = 'flex';
+                            });
+                        }).catch(() => {});
                     }
                 }
             } else {
                 secSection.style.display = 'none';
             }
-        }
-    }
-
-    function toggleVerified() {
-        const chat = chats.find(c => c.id === currentChatId);
-        const contactMember = chat?.members.find(m => m.profile_id !== userProfile?.id);
-        if (!contactMember) return;
-        const key = `minigram-verified-${contactMember.profile_id}`;
-        if (document.getElementById('verified-checkbox').checked) {
-            localStorage.setItem(key, 'true');
-            toast('Контакт отмечен как проверенный', 'success');
-        } else {
-            localStorage.removeItem(key);
         }
     }
 
@@ -3287,12 +3291,9 @@
             <input class="field-input" type="password" id="backup-pwd-2" placeholder="Повторите пароль">
         </div>
         <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn btn-primary btn-block" onclick="submitBackupPassword()">Сохранить резервную копию</button>
+            <button class="btn btn-primary btn-block" onclick="submitBackupPassword()">Сохранить</button>
             <button class="btn btn-secondary" onclick="hideModal('backup-password-modal')">Пропустить</button>
         </div>
-        <p style="margin-top:8px;font-size:12px;color:var(--warning)">
-            ⚠ Без резервной копии восстановить доступ к зашифрованным сообщениям с другого устройства невозможно.
-        </p>
     </div>
 </div>
 
