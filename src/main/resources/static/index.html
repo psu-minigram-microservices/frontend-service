@@ -1888,7 +1888,7 @@
             savePin(contactUserId, fetched);
         } else if (pinned !== fetched) {
             const accepted = await showMitmWarningModal(contactUserId, pinned, fetched);
-            if (!accepted) throw new Error('MITM suspected — message not sent');
+            if (!accepted) throw new Error('Подозрение на MITM — сообщение не отправлено');
             savePin(contactUserId, fetched);
             localStorage.removeItem(`minigram-verified-${contactUserId}`);
         }
@@ -1981,7 +1981,7 @@
             const pubCryptoKey = await importPublicKeyFromB64(myPublicKeyB64);
             await saveKeyToDb(`${userId}_publicKey`, pubCryptoKey);
         }
-        toast('Key imported successfully', 'success');
+        toast('Ключ успешно импортирован', 'success');
     }
 
     // ── Auth ──
@@ -2074,7 +2074,7 @@
     async function login() {
         const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
-        if (!email || !password) { showAuthError('Please enter email and password'); return; }
+        if (!email || !password) { showAuthError('Введите почту и пароль'); return; }
 
         baseUrl = document.getElementById('base-url').value.trim().replace(/\/+$/, '');
         hideAuthError();
@@ -2107,7 +2107,7 @@
     async function register() {
         const email = document.getElementById('register-email').value.trim();
         const password = document.getElementById('register-password').value;
-        if (!email || !password) { showAuthError('Please enter email and password'); return; }
+        if (!email || !password) { showAuthError('Введите почту и пароль'); return; }
 
         baseUrl = document.getElementById('base-url').value.trim().replace(/\/+$/, '');
         hideAuthError();
@@ -2151,7 +2151,7 @@
     function connectWithJwt() {
         const t = document.getElementById('jwt-token').value.trim();
         baseUrl = document.getElementById('base-url').value.trim().replace(/\/+$/, '');
-        if (!t) { showAuthError('Please enter a JWT token'); return; }
+        if (!t) { showAuthError('Введите JWT-токен'); return; }
         hideAuthError();
         try {
             token = t;
@@ -2161,7 +2161,7 @@
             localStorage.setItem('minigram-token', token);
             if (!userId) throw new Error('No sub claim');
         } catch (e) {
-            showAuthError('Invalid token: ' + e.message);
+            showAuthError('Неверный токен: ' + e.message);
             return;
         }
         enterMainScreen();
@@ -2230,21 +2230,21 @@
 
     async function createProfile() {
         const name = document.getElementById('new-profile-name').value.trim();
-        if (!name) { toast('Please enter a name', 'error'); return; }
+        if (!name) { toast('Введите имя', 'error'); return; }
         const photoUrl = document.getElementById('new-profile-photo').value.trim() || null;
         try {
             await api('POST', '/api/v1/profiles', { name, photoUrl });
             await loadProfile();
             updateSidebarUser();
             hideModal('create-profile-modal');
-            toast('Profile created', 'success');
+            toast('Профиль создан', 'success');
             await initCrypto();
 
             // Now that the profile exists, initialize WebSocket and load data
             connectWebSocket();
             loadChats();
             loadProfilesCache();
-        } catch (e) { toast('Failed to create profile: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка создания профиля: ' + e.message, 'error'); }
     }
 
     async function doLogout() {
@@ -2331,7 +2331,7 @@
         const dot = document.getElementById('ws-dot');
         const text = document.getElementById('ws-status-text');
         dot.className = 'ws-dot' + (status === 'connected' ? ' connected' : status === 'error' ? ' error' : '');
-        text.textContent = status === 'connected' ? 'Connected' : status === 'error' ? 'Error' : 'Disconnected';
+        text.textContent = status === 'connected' ? 'Подключено' : status === 'error' ? 'Ошибка' : 'Отключено';
     }
 
     // ── API ──
@@ -2445,19 +2445,19 @@
             const data = await api('GET', '/api/v1/chats?size=100');
             chats = data.content || [];
             renderChatList();
-        } catch (e) { toast('Failed to load chats: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка загрузки чатов: ' + e.message, 'error'); }
     }
 
     function renderChatList() {
         const list = document.getElementById('chat-list');
         if (!chats.length) {
-            list.innerHTML = '<div class="chat-list-empty">No chats yet. Create one!</div>';
+            list.innerHTML = '<div class="chat-list-empty">Нет чатов. Создайте первый!</div>';
             return;
         }
         list.innerHTML = chats.map(c => {
             const name = chatDisplayName(c);
             const meta = c.type === 'group'
-                ? `${c.members ? c.members.length + ' members' : ''} &middot; #${c.id}`
+                ? `${c.members ? c.members.length + ' участников' : ''} &middot; #${c.id}`
                 : `#${c.id}`;
             return `
             <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="openChat(${c.id})">
@@ -2471,12 +2471,12 @@
     }
 
     function chatDisplayName(chat) {
-        if (chat.type === 'saved') return 'Saved Messages';
+        if (chat.type === 'saved') return 'Сохранённые сообщения';
         if (chat.type === 'direct') {
             const other = chat.members?.find(m => m.profile_id !== userProfile?.id);
-            return other?.name || other?.profile_id || 'Direct Chat';
+            return other?.name || other?.profile_id || 'Личный чат';
         }
-        return chat.title || 'Group Chat';
+        return chat.title || 'Групповой чат';
     }
 
     async function openChat(id) {
@@ -2535,7 +2535,7 @@
         const key = `minigram-verified-${contactMember.profile_id}`;
         if (document.getElementById('verified-checkbox').checked) {
             localStorage.setItem(key, 'true');
-            toast('Contact marked as verified', 'success');
+            toast('Контакт отмечен как проверенный', 'success');
         } else {
             localStorage.removeItem(key);
         }
@@ -2549,13 +2549,13 @@
             const data = await api('GET', `/api/v1/chats/${currentChatId}/messages?size=100`);
             messages = (data.content || []).reverse();
             await renderMessages();
-        } catch (e) { toast('Failed to load messages: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка загрузки сообщений: ' + e.message, 'error'); }
     }
 
     async function renderMessages() {
         const area = document.getElementById('messages-area');
         if (!messages.length) {
-            area.innerHTML = '<div class="messages-empty">No messages yet. Say hello!</div>';
+            area.innerHTML = '<div class="messages-empty">Сообщений пока нет. Поздоровайтесь!</div>';
             return;
         }
 
@@ -2586,17 +2586,17 @@
                 if (contactPubKeyB64 && myPrivateKey) {
                     try {
                         displayContent = esc(await decryptMessage(m.content, contactPubKeyB64));
-                        lockIcon = '<span title="End-to-end encrypted" style="color:var(--success);font-size:11px">&#x1F512;</span>';
+                        lockIcon = '<span title="Сквозное шифрование" style="color:var(--success);font-size:11px">&#x1F512;</span>';
                     } catch {
-                        displayContent = '<em style="color:var(--text-tertiary)">[could not decrypt]</em>';
-                        lockIcon = '<span title="Decryption failed" style="color:var(--warning);font-size:11px">&#x26A0;</span>';
+                        displayContent = '<em style="color:var(--text-tertiary)">[не удалось расшифровать]</em>';
+                        lockIcon = '<span title="Ошибка расшифровки" style="color:var(--warning);font-size:11px">&#x26A0;</span>';
                     }
                 } else {
-                    displayContent = '<em style="color:var(--text-tertiary)">[encrypted]</em>';
-                    lockIcon = '<span title="Encrypted" style="color:var(--text-tertiary);font-size:11px">&#x1F512;</span>';
+                    displayContent = '<em style="color:var(--text-tertiary)">[зашифровано]</em>';
+                    lockIcon = '<span title="Зашифровано" style="color:var(--text-tertiary);font-size:11px">&#x1F512;</span>';
                 }
             } else if (isDirect) {
-                lockIcon = '<span title="Not encrypted" style="color:var(--text-tertiary);font-size:11px">&#x1F513;</span>';
+                lockIcon = '<span title="Не зашифровано" style="color:var(--text-tertiary);font-size:11px">&#x1F513;</span>';
             }
 
             return `<div class="message ${isOwn ? 'own' : 'other'}">
@@ -2606,8 +2606,8 @@
                         <span class="message-time">${new Date(m.created_at).toLocaleTimeString()}</span>
                     </div>
                     ${isOwn ? `<div class="message-actions">
-                        <button class="message-action-btn" onclick="showEditMessageModal(${m.id}, '${escAttr(m.content)}')">edit</button>
-                        <button class="message-action-btn" onclick="deleteMessage(${m.id})">del</button>
+                        <button class="message-action-btn" onclick="showEditMessageModal(${m.id}, '${escAttr(m.content)}')">изм</button>
+                        <button class="message-action-btn" onclick="deleteMessage(${m.id})">удл</button>
                     </div>` : ''}
             </div>`;
         }));
@@ -2629,7 +2629,7 @@
         try {
             if (isDirect && myPrivateKey) {
                 const contactMember = chat.members.find(m => m.profile_id !== userProfile?.id);
-                if (!contactMember) throw new Error('Contact not found in chat');
+                if (!contactMember) throw new Error('Контакт не найден в чате');
                 const contactId = contactMember.profile_id;
 
                 let contactPubKeyB64;
@@ -2637,7 +2637,7 @@
                     contactPubKeyB64 = await getContactKey(contactId);
                 } catch (e) {
                     // Contact has no key yet — confirm plaintext send
-                    if (!confirm('This contact has not set up encryption yet. Send as plain text?')) {
+                    if (!confirm('У контакта нет ключей шифрования. Отправить как обычный текст?')) {
                         input.value = content;
                         return;
                     }
@@ -2652,15 +2652,15 @@
                 await api('POST', `/api/v1/chats/${currentChatId}/messages`, { content });
             }
         } catch (e) {
-            toast('Send failed: ' + e.message, 'error');
+            toast('Ошибка отправки: ' + e.message, 'error');
             input.value = content;
         }
     }
 
     async function deleteMessage(id) {
-        if (!confirm('Delete this message?')) return;
+        if (!confirm('Удалить это сообщение?')) return;
         try { await api('DELETE', `/api/v1/chats/${currentChatId}/messages/${id}`); }
-        catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+        catch (e) { toast('Ошибка удаления: ' + e.message, 'error'); }
     }
 
     async function editMessage() {
@@ -2670,7 +2670,7 @@
         try {
             await api('PATCH', `/api/v1/chats/${currentChatId}/messages/${id}`, { content });
             hideModal('edit-message-modal');
-        } catch (e) { toast('Edit failed: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка редактирования: ' + e.message, 'error'); }
     }
 
     // ── Members ──
@@ -2680,7 +2680,7 @@
         try {
             const data = await api('GET', `/api/v1/chats/${currentChatId}/members?size=100`);
             renderMembers(data.content || []);
-        } catch (e) { toast('Failed to load members: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка загрузки участников: ' + e.message, 'error'); }
     }
 
     function renderMembers(members) {
@@ -2692,18 +2692,18 @@
             <div class="member-item">
                 <span class="member-uuid">${esc(m.name || shortId(m.profile_id))}</span>
                 <span class="member-role-tag ${m.role === 'OWNER' ? 'owner' : ''}">${m.role}</span>
-                ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.profile_id}')">Kick</button>` : ''}
+                ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.profile_id}')">Исключить</button>` : ''}
             </div>`;
         }).join('');
     }
 
     async function kickMember(memberId) {
-        if (!confirm('Kick this member?')) return;
+        if (!confirm('Исключить этого участника?')) return;
         try {
             await api('DELETE', `/api/v1/chats/${currentChatId}/members/${memberId}`);
             await loadMembers();
-            toast('Member kicked', 'success');
-        } catch (e) { toast('Kick failed: ' + e.message, 'error'); }
+            toast('Участник исключён', 'success');
+        } catch (e) { toast('Ошибка исключения: ' + e.message, 'error'); }
     }
 
     async function inviteMember() {
@@ -2714,8 +2714,8 @@
             await api('POST', `/api/v1/chats/${currentChatId}/members/${uid}`);
             hideModal('invite-member-modal');
             await loadMembers();
-            toast('Member invited', 'success');
-        } catch (e) { toast('Invite failed: ' + e.message, 'error'); }
+            toast('Участник приглашён', 'success');
+        } catch (e) { toast('Ошибка приглашения: ' + e.message, 'error'); }
     }
 
     // ── Chat CRUD ──
@@ -2732,8 +2732,8 @@
             hideModal('create-chat-modal');
             await loadChats();
             if (chat?.id) openChat(chat.id);
-            toast('Chat created', 'success');
-        } catch (e) { toast('Create failed: ' + e.message, 'error'); }
+            toast('Чат создан', 'success');
+        } catch (e) { toast('Ошибка создания: ' + e.message, 'error'); }
     }
 
     async function editChat() {
@@ -2744,12 +2744,12 @@
             hideModal('edit-chat-modal');
             await loadChats();
             document.getElementById('chat-title').textContent = title;
-            toast('Chat updated', 'success');
-        } catch (e) { toast('Edit failed: ' + e.message, 'error'); }
+            toast('Чат обновлён', 'success');
+        } catch (e) { toast('Ошибка редактирования: ' + e.message, 'error'); }
     }
 
     async function deleteChat() {
-        if (!confirm('Delete this chat?')) return;
+        if (!confirm('Удалить этот чат?')) return;
         try {
             await api('DELETE', `/api/v1/chats/${currentChatId}`);
             currentChatId = null;
@@ -2757,14 +2757,14 @@
             document.getElementById('no-chat').style.display = '';
             document.getElementById('members-panel').classList.remove('show');
             await loadChats();
-            toast('Chat deleted', 'success');
-        } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+            toast('Чат удалён', 'success');
+        } catch (e) { toast('Ошибка удаления: ' + e.message, 'error'); }
     }
 
     // ── Leave Chat ──
 
     async function leaveChat() {
-        if (!confirm('Leave this chat?')) return;
+        if (!confirm('Выйти из этого чата?')) return;
         try {
             await api('DELETE', `/api/v1/chats/${currentChatId}/members/me`);
             currentChatId = null;
@@ -2772,8 +2772,8 @@
             document.getElementById('no-chat').style.display = '';
             document.getElementById('members-panel').classList.remove('show');
             await loadChats();
-            toast('Left the chat', 'success');
-        } catch (e) { toast('Leave failed: ' + e.message, 'error'); }
+            toast('Вы вышли из чата', 'success');
+        } catch (e) { toast('Ошибка выхода: ' + e.message, 'error'); }
     }
 
     // ── Contacts ──
@@ -2799,18 +2799,18 @@
             renderIncomingInvites(incomingData.data || []);
             renderSentInvites(outgoingData.data || []);
             renderBlocked(blockedData.data || []);
-        } catch (e) { toast('Failed to load contacts: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка загрузки контактов: ' + e.message, 'error'); }
     }
 
     function renderFriends(friends) {
         const el = document.getElementById('friends-list');
-        if (!friends.length) { el.innerHTML = '<div class="contacts-empty">No friends yet</div>'; return; }
+        if (!friends.length) { el.innerHTML = '<div class="contacts-empty">Нет друзей</div>'; return; }
         el.innerHTML = friends.map(f => `
             <div class="contact-item">
                 <div class="contact-avatar">${profileAvatar(f)}</div>
                 <span class="contact-name">${esc(f.name || shortId(f.id))}</span>
                 <div class="contact-actions">
-                    <button class="btn btn-danger-ghost btn-sm" onclick="deleteRelation('${f.id}')">Remove</button>
+                    <button class="btn btn-danger-ghost btn-sm" onclick="deleteRelation('${f.id}')">Удалить</button>
                 </div>
             </div>
         `).join('');
@@ -2818,15 +2818,15 @@
 
     function renderIncomingInvites(invites) {
         const el = document.getElementById('incoming-invites-list');
-        if (!invites.length) { el.innerHTML = '<div class="contacts-empty">No incoming invites</div>'; return; }
+        if (!invites.length) { el.innerHTML = '<div class="contacts-empty">Нет входящих заявок</div>'; return; }
         el.innerHTML = invites.map(p => `
             <div class="contact-item">
                 <div class="contact-avatar">${profileAvatar(p)}</div>
                 <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
                 <div class="contact-actions">
-                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 0)">Accept</button>
-                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 1)">Reject</button>
-                    <button class="btn btn-danger-ghost btn-sm" onclick="replyContactInvite('${p.id}', 2)">Block</button>
+                    <button class="btn btn-primary btn-sm" onclick="replyContactInvite('${p.id}', 0)">Принять</button>
+                    <button class="btn btn-ghost btn-sm" onclick="replyContactInvite('${p.id}', 1)">Отклонить</button>
+                    <button class="btn btn-danger-ghost btn-sm" onclick="replyContactInvite('${p.id}', 2)">Заблокировать</button>
                 </div>
             </div>
         `).join('');
@@ -2834,14 +2834,14 @@
 
     function renderSentInvites(invites) {
         const el = document.getElementById('sent-invites-list');
-        if (!invites.length) { el.innerHTML = '<div class="contacts-empty">No sent invites</div>'; return; }
+        if (!invites.length) { el.innerHTML = '<div class="contacts-empty">Нет исходящих заявок</div>'; return; }
         el.innerHTML = invites.map(p => `
             <div class="contact-item">
                 <div class="contact-avatar">${profileAvatar(p)}</div>
                 <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
                 <div class="contact-actions">
-                    <button class="btn btn-ghost btn-sm" disabled style="opacity:0.5">Pending</button>
-                    <button class="btn btn-danger-ghost btn-sm" onclick="deleteRelation('${p.id}')">Cancel</button>
+                    <button class="btn btn-ghost btn-sm" disabled style="opacity:0.5">Ожидание</button>
+                    <button class="btn btn-danger-ghost btn-sm" onclick="deleteRelation('${p.id}')">Отозвать</button>
                 </div>
             </div>
         `).join('');
@@ -2849,13 +2849,13 @@
 
     function renderBlocked(blocked) {
         const el = document.getElementById('blocked-list');
-        if (!blocked.length) { el.innerHTML = '<div class="contacts-empty">No blocked users</div>'; return; }
+        if (!blocked.length) { el.innerHTML = '<div class="contacts-empty">Нет заблокированных пользователей</div>'; return; }
         el.innerHTML = blocked.map(p => `
             <div class="contact-item">
                 <div class="contact-avatar">${profileAvatar(p)}</div>
                 <span class="contact-name">${esc(p.name || shortId(p.id))}</span>
                 <div class="contact-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="deleteRelation('${p.id}')">Unblock</button>
+                    <button class="btn btn-ghost btn-sm" onclick="deleteRelation('${p.id}')">Разблокировать</button>
                 </div>
             </div>
         `).join('');
@@ -2876,41 +2876,41 @@
     async function sendContactInvite() {
         const input = document.getElementById('send-invite-user');
         const uid = input.dataset.selectedId || input.value.trim();
-        if (!uid) { toast('Please select a user', 'error'); return; }
-        if (uid === userProfile?.id) { toast('You cannot add yourself', 'error'); return; }
+        if (!uid) { toast('Выберите пользователя', 'error'); return; }
+        if (uid === userProfile?.id) { toast('Нельзя добавить самого себя', 'error'); return; }
         try {
             await api('POST', `/api/v1/profiles/relations/send/${uid}`);
             hideModal('send-invite-modal');
             input.dataset.selectedId = '';
-            toast('Invite sent', 'success');
+            toast('Заявка отправлена', 'success');
             loadContacts();
             loadProfilesCache();
-        } catch (e) { toast('Invite failed: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка отправки: ' + e.message, 'error'); }
     }
 
     async function replyContactInvite(senderId, status) {
         try {
             await api('POST', `/api/v1/profiles/relations/reply/${senderId}?status=${status}`);
-            toast(`Invite ${(['accepted', 'rejected', 'blocked'][status] ?? status)}`, 'success');
+            toast(`Заявка ${(['принята', 'отклонена', 'заблокирована'][status] ?? status)}`, 'success');
             loadContacts();
             loadProfilesCache();
-        } catch (e) { toast('Reply failed: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка ответа: ' + e.message, 'error'); }
     }
 
     async function deleteRelation(receiverId) {
-        if (!confirm('Remove this contact?')) return;
+        if (!confirm('Удалить этот контакт?')) return;
         try {
             await api('DELETE', `/api/v1/profiles/relations/${receiverId}`);
-            toast('Contact removed', 'success');
+            toast('Контакт удалён', 'success');
             loadContacts();
             loadProfilesCache();
-        } catch (e) { toast('Remove failed: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка удаления: ' + e.message, 'error'); }
     }
 
     // ── Edit Profile ──
 
     function showEditProfileModal() {
-        if (!userProfile) { toast('Create a profile first', 'error'); return; }
+        if (!userProfile) { toast('Сначала создайте профиль', 'error'); return; }
         document.getElementById('edit-profile-name').value = userProfile.name || '';
         document.getElementById('edit-profile-photo').value = userProfile.photoUrl || '';
         showModal('edit-profile-modal');
@@ -2918,7 +2918,7 @@
 
     async function updateProfile() {
         const name = document.getElementById('edit-profile-name').value.trim();
-        if (!name) { toast('Please enter a name', 'error'); return; }
+        if (!name) { toast('Введите имя', 'error'); return; }
         const photoUrl = document.getElementById('edit-profile-photo').value.trim() || null;
         try {
             await api('PUT', '/api/v1/profiles', { name, photoUrl });
@@ -2926,8 +2926,8 @@
             updateSidebarUser();
             loadProfilesCache();
             hideModal('edit-profile-modal');
-            toast('Profile updated', 'success');
-        } catch (e) { toast('Failed to update profile: ' + e.message, 'error'); }
+            toast('Профиль обновлён', 'success');
+        } catch (e) { toast('Ошибка обновления профиля: ' + e.message, 'error'); }
     }
 
     // ── Autocomplete ──
@@ -3096,7 +3096,7 @@
         const isDirect = t === 'DIRECT';
         document.getElementById('chat-title-field').style.display = t === 'GROUP' ? '' : 'none';
         document.getElementById('chat-members-field').style.display = t === 'SAVED' ? 'none' : '';
-        document.getElementById('chat-members-label').textContent = isDirect ? 'Member UUID' : 'Member UUIDs';
+        document.getElementById('chat-members-label').textContent = isDirect ? 'UUID участника' : 'UUID участников';
         document.getElementById('new-chat-members').placeholder = isDirect ? 'uuid' : 'uuid1, uuid2, ...';
         document.getElementById('new-chat-members').value = '';
     }
@@ -3107,18 +3107,18 @@
 
     async function submitRestoreKey() {
         const pwd = document.getElementById('restore-pwd').value;
-        if (!pwd) { toast('Enter your backup password', 'error'); return; }
+        if (!pwd) { toast('Введите пароль резервной копии', 'error'); return; }
         try {
             const ok = await tryRestoreFromServer(pwd);
             if (ok) {
                 hideModal('restore-key-modal');
                 document.getElementById('restore-pwd').value = '';
-                toast('Encryption keys restored successfully', 'success');
+                toast('Ключи шифрования восстановлены', 'success');
             } else {
-                toast('No backup found', 'error');
+                toast('Резервная копия не найдена', 'error');
             }
         } catch (e) {
-            toast('Restore failed — wrong password?', 'error');
+            toast('Ошибка восстановления — неверный пароль?', 'error');
         }
     }
 
@@ -3147,35 +3147,35 @@
 
     async function submitExportKey() {
         const pwd = document.getElementById('export-key-pwd').value;
-        if (!pwd) { toast('Enter a password', 'error'); return; }
+        if (!pwd) { toast('Введите пароль', 'error'); return; }
         try {
             await exportKeyFile(pwd);
             hideModal('export-key-modal');
             document.getElementById('export-key-pwd').value = '';
-        } catch (e) { toast('Export failed: ' + e.message, 'error'); }
+        } catch (e) { toast('Ошибка экспорта: ' + e.message, 'error'); }
     }
 
     async function handleImportKey(file) {
         if (!file) return;
-        const pwd = prompt('Enter the password for this key file:');
+        const pwd = prompt('Введите пароль для этого файла ключа:');
         if (!pwd) return;
         try {
             await importKeyFile(file, pwd);
-        } catch (e) { toast('Import failed — wrong password or invalid file', 'error'); }
+        } catch (e) { toast('Ошибка импорта — неверный пароль или повреждённый файл', 'error'); }
         document.getElementById('import-key-file').value = '';
     }
 
     async function submitBackupPassword() {
         const p1 = document.getElementById('backup-pwd-1').value;
         const p2 = document.getElementById('backup-pwd-2').value;
-        if (p1.length < 8)  { toast('Password must be at least 8 characters', 'error'); return; }
-        if (p1 !== p2)      { toast('Passwords do not match', 'error'); return; }
+        if (p1.length < 8)  { toast('Пароль должен содержать не менее 8 символов', 'error'); return; }
+        if (p1 !== p2)      { toast('Пароли не совпадают', 'error'); return; }
         try {
             await backupToServer(p1);
             hideModal('backup-password-modal');
-            toast('Encryption key backed up successfully', 'success');
+            toast('Резервная копия ключа сохранена', 'success');
         } catch (e) {
-            toast('Backup failed: ' + e.message, 'error');
+            toast('Ошибка резервного копирования: ' + e.message, 'error');
         }
     }
 
