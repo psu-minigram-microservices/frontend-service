@@ -2688,7 +2688,7 @@
             return `
             <div class="member-item">
                 <span class="member-uuid">${esc(m.name || shortId(m.profile_id))}</span>
-                <span class="member-role-tag ${m.role === 'OWNER' ? 'owner' : ''}">${m.role}</span>
+                <span class="member-role-tag ${m.role === 'owner' ? 'owner' : ''}">${m.role}</span>
                 ${canKick ? `<button class="btn btn-danger-ghost btn-sm" onclick="kickMember('${m.profile_id}')">Исключить</button>` : ''}
             </div>`;
         }).join('');
