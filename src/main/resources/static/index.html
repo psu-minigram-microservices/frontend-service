@@ -1465,6 +1465,12 @@
                     <div class="chat-header-info">
                         <h3 id="chat-title"></h3>
                         <div class="chat-header-meta" id="chat-meta"></div>
+                        <div id="security-section" style="display:none;margin-top:5px;align-items:center;gap:8px;flex-wrap:wrap">
+                            <span style="font-size:11px;color:var(--text-tertiary)">Отпечаток:</span>
+                            <span id="fingerprint-display" style="font-family:monospace;font-size:11px;color:var(--text-primary);background:var(--bg-tertiary);padding:2px 6px;border-radius:3px">—</span>
+                            <input type="checkbox" id="verified-checkbox" onchange="toggleVerified()">
+                            <label for="verified-checkbox" style="font-size:11px;color:var(--text-secondary);cursor:pointer">Проверено</label>
+                        </div>
                     </div>
                     <div class="chat-header-actions">
                         <button class="btn btn-ghost btn-sm" id="btn-members" onclick="toggleMembers()">Members</button>
@@ -1488,27 +1494,6 @@
                 <button class="btn btn-primary btn-sm" onclick="showInviteMemberModal()">Invite</button>
             </div>
             <div class="members-list" id="members-list"></div>
-            <!-- Security section — shown only for DIRECT chats when contact key is pinned -->
-            <div id="security-section" style="display:none;padding:16px;border-top:1px solid var(--border-primary)">
-                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:8px">
-                    Security
-                </div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">
-                    Encryption fingerprint:
-                </div>
-                <div id="fingerprint-display"
-                     style="font-family:monospace;font-size:11px;color:var(--text-primary);
-                            background:var(--bg-tertiary);padding:8px;border-radius:4px;
-                            word-break:break-all;margin-bottom:8px">
-                    &#x2014;
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                    <input type="checkbox" id="verified-checkbox" onchange="toggleVerified()">
-                    <label for="verified-checkbox" style="font-size:12px;color:var(--text-secondary)">
-                        I've verified this fingerprint out-of-band
-                    </label>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -2532,7 +2517,7 @@
                         });
                         const verified = !!localStorage.getItem(`minigram-verified-${contactMember.profile_id}`);
                         document.getElementById('verified-checkbox').checked = verified;
-                        secSection.style.display = '';
+                        secSection.style.display = 'flex';
                     } else {
                         secSection.style.display = 'none';
                     }
