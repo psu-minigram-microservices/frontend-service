@@ -3276,7 +3276,7 @@
             <button class="modal-close" onclick="hideModal('backup-password-modal')">&#x2715;</button>
         </div>
         <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px">
-            Set a password to back up your encryption key. You will need this to restore messages on a new device.
+            Ваш ключ шифрования сохранён только в этом браузере. Без резервной копии при входе с другого устройства или браузера будет создан новый ключ — все текущие зашифрованные переписки станут нечитаемы навсегда.
         </p>
         <div class="field-group">
             <label class="field-label">Password</label>
@@ -3290,6 +3290,9 @@
             <button class="btn btn-primary btn-block" onclick="submitBackupPassword()">Save backup</button>
             <button class="btn btn-secondary" onclick="hideModal('backup-password-modal')">Skip</button>
         </div>
+        <p style="margin-top:8px;font-size:12px;color:var(--warning)">
+            ⚠ Без резервной копии восстановить доступ к зашифрованным сообщениям с другого устройства невозможно.
+        </p>
     </div>
 </div>
 
