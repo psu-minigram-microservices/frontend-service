@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1340,53 +1340,53 @@
                 <div class="auth-brand-icon">M</div>
                 <h1>Minigram</h1>
             </div>
-            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
         </div>
-        <p class="auth-subtitle">Real-time chat client. Sign in or create an account to get started.</p>
+        <p class="auth-subtitle">Клиент мессенджера в реальном времени. Войдите или создайте аккаунт.</p>
 
-        <label class="field-label" for="base-url">Server</label>
+        <label class="field-label" for="base-url">Сервер</label>
         <input class="field-input" type="text" id="base-url" placeholder="http://localhost">
 
         <div class="auth-error" id="auth-error"></div>
 
         <!-- Login / Register tabs -->
         <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
-            <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+            <button class="auth-tab active" onclick="switchAuthTab('login')">Войти</button>
+            <button class="auth-tab" onclick="switchAuthTab('register')">Регистрация</button>
         </div>
 
         <!-- Login form -->
         <div class="auth-form-section active" id="auth-login">
-            <label class="field-label" for="login-email">Email</label>
+            <label class="field-label" for="login-email">Почта</label>
             <input class="field-input" type="email" id="login-email" placeholder="user@example.com">
-            <label class="field-label" for="login-password">Password</label>
+            <label class="field-label" for="login-password">Пароль</label>
             <div class="password-wrap">
-                <input class="field-input" type="password" id="login-password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')login()">
-                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('login-password', this)" title="Show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <input class="field-input" type="password" id="login-password" placeholder="Введите пароль" onkeydown="if(event.key==='Enter')login()">
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('login-password', this)" title="Показать пароль"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
-            <button class="btn btn-primary btn-block" id="btn-login" onclick="login()">Sign In</button>
+            <button class="btn btn-primary btn-block" id="btn-login" onclick="login()">Войти</button>
         </div>
 
         <!-- Register form -->
         <div class="auth-form-section" id="auth-register">
-            <label class="field-label" for="register-email">Email</label>
+            <label class="field-label" for="register-email">Почта</label>
             <input class="field-input" type="email" id="register-email" placeholder="user@example.com">
-            <label class="field-label" for="register-password">Password</label>
+            <label class="field-label" for="register-password">Пароль</label>
             <div class="password-wrap">
-                <input class="field-input" type="password" id="register-password" placeholder="Choose a password" onkeydown="if(event.key==='Enter')register()">
-                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('register-password', this)" title="Show password"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <input class="field-input" type="password" id="register-password" placeholder="Придумайте пароль" onkeydown="if(event.key==='Enter')register()">
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('register-password', this)" title="Показать пароль"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
-            <button class="btn btn-primary btn-block" id="btn-register" onclick="register()">Create Account</button>
+            <button class="btn btn-primary btn-block" id="btn-register" onclick="register()">Создать аккаунт</button>
         </div>
 
         <!-- JWT fallback -->
         <div class="auth-fallback-toggle">
-            <a href="#" onclick="toggleJwtFallback(); return false;" id="jwt-fallback-link">or use JWT token</a>
+            <a href="#" onclick="toggleJwtFallback(); return false;" id="jwt-fallback-link">или войти по JWT-токену</a>
         </div>
         <div id="jwt-fallback" style="display: none; margin-top: 16px;">
-            <label class="field-label" for="jwt-token">JWT Token</label>
+            <label class="field-label" for="jwt-token">JWT-токен</label>
             <textarea class="field-textarea" id="jwt-token" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
-            <button class="btn btn-primary btn-block" onclick="connectWithJwt()">Connect</button>
+            <button class="btn btn-primary btn-block" onclick="connectWithJwt()">Подключиться</button>
         </div>
     </div>
 </div>
@@ -1402,54 +1402,54 @@
                     <h2>Minigram</h2>
                 </div>
                 <div class="sidebar-header-right">
-                    <div class="sidebar-user-info" onclick="showEditProfileModal()" title="Edit profile">
+                    <div class="sidebar-user-info" onclick="showEditProfileModal()" title="Редактировать профиль">
                         <div class="sidebar-avatar" id="sidebar-avatar"></div>
                         <span class="sidebar-user-name" id="user-display-name"></span>
                     </div>
-                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
                 </div>
             </div>
             <div class="sidebar-actions">
-                <button class="btn btn-primary btn-sm" onclick="showCreateChatModal()">New Chat</button>
-                <button class="btn btn-ghost btn-sm" onclick="refresh()">Refresh</button>
-                <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+                <button class="btn btn-primary btn-sm" onclick="showCreateChatModal()">Новый чат</button>
+                <button class="btn btn-ghost btn-sm" onclick="refresh()">Обновить</button>
+                <button class="btn btn-ghost btn-sm" onclick="doLogout()">Выйти</button>
                 <div class="key-menu-wrap">
-                    <button class="btn btn-ghost btn-sm" onclick="toggleKeyMenu()" title="Encryption keys">🔑</button>
+                    <button class="btn btn-ghost btn-sm" onclick="toggleKeyMenu()" title="Ключи шифрования">🔑</button>
                     <div class="key-menu" id="key-menu">
-                        <button onclick="showExportKeyModal(); closeKeyMenu()">Export key</button>
-                        <button onclick="document.getElementById('import-key-file').click(); closeKeyMenu()">Import key</button>
+                        <button onclick="showExportKeyModal(); closeKeyMenu()">Экспорт ключа</button>
+                        <button onclick="document.getElementById('import-key-file').click(); closeKeyMenu()">Импорт ключа</button>
                     </div>
                     <input type="file" id="import-key-file" accept=".mgkey" style="display:none"
                            onchange="handleImportKey(this.files[0])">
                 </div>
             </div>
             <div class="sidebar-tabs">
-                <button class="sidebar-tab active" onclick="switchSidebarTab('chats')">Chats</button>
-                <button class="sidebar-tab" onclick="switchSidebarTab('contacts')">Contacts</button>
+                <button class="sidebar-tab active" onclick="switchSidebarTab('chats')">Чаты</button>
+                <button class="sidebar-tab" onclick="switchSidebarTab('contacts')">Контакты</button>
             </div>
             <div class="sidebar-tab-content active" id="chats-tab">
                 <div class="chat-list" id="chat-list"></div>
             </div>
             <div class="sidebar-tab-content" id="contacts-tab">
                 <div class="contacts-header">
-                    <span style="font-size:14px;font-weight:600;color:var(--text-secondary)">Contacts</span>
-                    <button class="btn btn-primary btn-sm" onclick="showSendInviteModal()">Add Contact</button>
+                    <span style="font-size:14px;font-weight:600;color:var(--text-secondary)">Контакты</span>
+                    <button class="btn btn-primary btn-sm" onclick="showSendInviteModal()">Добавить контакт</button>
                 </div>
                 <div id="contacts-content">
-                    <div class="contacts-section-title">Friends</div>
+                    <div class="contacts-section-title">Друзья</div>
                     <div class="contacts-list" id="friends-list"></div>
-                    <div class="contacts-section-title">Incoming Invites</div>
+                    <div class="contacts-section-title">Входящие заявки</div>
                     <div class="contacts-list" id="incoming-invites-list"></div>
-                    <div class="contacts-section-title">Sent Invites</div>
+                    <div class="contacts-section-title">Исходящие заявки</div>
                     <div class="contacts-list" id="sent-invites-list"></div>
-                    <div class="contacts-section-title">Blocked</div>
+                    <div class="contacts-section-title">Заблокированные</div>
                     <div class="contacts-list" id="blocked-list"></div>
                 </div>
             </div>
             <div class="events-log" id="events-log"></div>
             <div class="ws-status">
                 <div class="ws-dot" id="ws-dot"></div>
-                <span id="ws-status-text">Disconnected</span>
+                <span id="ws-status-text">Отключено</span>
             </div>
         </div>
 
@@ -1457,7 +1457,7 @@
         <div class="chat-panel">
             <div class="chat-empty" id="no-chat">
                 <div class="chat-empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-                <span class="chat-empty-text">Select a chat to start messaging</span>
+                <span class="chat-empty-text">Выберите чат, чтобы начать общение</span>
             </div>
 
             <div id="active-chat">
@@ -1473,15 +1473,15 @@
                         </div>
                     </div>
                     <div class="chat-header-actions">
-                        <button class="btn btn-ghost btn-sm" id="btn-members" onclick="toggleMembers()">Members</button>
-                        <button class="btn btn-ghost btn-sm" id="btn-edit-chat" onclick="showEditChatModal()">Edit</button>
-                        <button class="btn btn-ghost btn-sm" id="btn-leave-chat" onclick="leaveChat()" style="display:none">Leave</button>
-                        <button class="btn btn-danger-ghost btn-sm" onclick="deleteChat()">Delete</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-members" onclick="toggleMembers()">Участники</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-edit-chat" onclick="showEditChatModal()">Изменить</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-leave-chat" onclick="leaveChat()" style="display:none">Покинуть</button>
+                        <button class="btn btn-danger-ghost btn-sm" onclick="deleteChat()">Удалить</button>
                     </div>
                 </div>
                 <div class="messages-area" id="messages-area"></div>
                 <div class="message-input-area">
-                    <input class="message-input" type="text" id="message-input" placeholder="Write a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+                    <input class="message-input" type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key==='Enter')sendMessage()">
                     <button class="send-btn" onclick="sendMessage()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
                 </div>
             </div>
@@ -1490,8 +1490,8 @@
         <!-- Members Panel -->
         <div class="members-panel" id="members-panel">
             <div class="members-header">
-                <h4>Members</h4>
-                <button class="btn btn-primary btn-sm" onclick="showInviteMemberModal()">Invite</button>
+                <h4>Участники</h4>
+                <button class="btn btn-primary btn-sm" onclick="showInviteMemberModal()">Пригласить</button>
             </div>
             <div class="members-list" id="members-list"></div>
         </div>
@@ -1501,27 +1501,27 @@
 <!-- Create Chat Modal -->
 <div class="modal-overlay" id="create-chat-modal">
     <div class="modal">
-        <h3>New Chat</h3>
-        <label class="field-label" for="new-chat-type">Type</label>
+        <h3>Новый чат</h3>
+        <label class="field-label" for="new-chat-type">Тип</label>
         <select id="new-chat-type" onchange="onChatTypeChange()">
-            <option value="SAVED">Saved (personal)</option>
-            <option value="DIRECT">Direct (1-on-1)</option>
-            <option value="GROUP" selected>Group</option>
+            <option value="SAVED">Сохранённые (личные)</option>
+            <option value="DIRECT">Личный чат</option>
+            <option value="GROUP" selected>Группа</option>
         </select>
         <div id="chat-title-field">
-            <label class="field-label" for="new-chat-title">Title</label>
-            <input class="field-input" type="text" id="new-chat-title" placeholder="Chat name" maxlength="255">
+            <label class="field-label" for="new-chat-title">Название</label>
+            <input class="field-input" type="text" id="new-chat-title" placeholder="Название чата" maxlength="255">
         </div>
         <div id="chat-members-field">
-            <label class="field-label" id="chat-members-label" for="new-chat-members">Member UUIDs</label>
+            <label class="field-label" id="chat-members-label" for="new-chat-members">UUID участников</label>
             <div class="autocomplete-wrap">
                 <input class="field-input" type="text" id="new-chat-members" placeholder="uuid1, uuid2, ..." autocomplete="off">
                 <div class="autocomplete-list" id="ac-new-chat-members"></div>
             </div>
         </div>
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="hideModal('create-chat-modal')">Cancel</button>
-            <button class="btn btn-primary" onclick="createChat()">Create</button>
+            <button class="btn btn-ghost" onclick="hideModal('create-chat-modal')">Отмена</button>
+            <button class="btn btn-primary" onclick="createChat()">Создать</button>
         </div>
     </div>
 </div>
@@ -1529,12 +1529,12 @@
 <!-- Edit Chat Modal -->
 <div class="modal-overlay" id="edit-chat-modal">
     <div class="modal">
-        <h3>Edit Chat</h3>
-        <label class="field-label" for="edit-chat-title">Title</label>
-        <input class="field-input" type="text" id="edit-chat-title" placeholder="New title" maxlength="255">
+        <h3>Редактировать чат</h3>
+        <label class="field-label" for="edit-chat-title">Название</label>
+        <input class="field-input" type="text" id="edit-chat-title" placeholder="Новое название" maxlength="255">
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="hideModal('edit-chat-modal')">Cancel</button>
-            <button class="btn btn-primary" onclick="editChat()">Save</button>
+            <button class="btn btn-ghost" onclick="hideModal('edit-chat-modal')">Отмена</button>
+            <button class="btn btn-primary" onclick="editChat()">Сохранить</button>
         </div>
     </div>
 </div>
@@ -1542,15 +1542,15 @@
 <!-- Invite Member Modal -->
 <div class="modal-overlay" id="invite-member-modal">
     <div class="modal">
-        <h3>Invite Member</h3>
-        <label class="field-label" for="invite-user-id">User UUID</label>
+        <h3>Пригласить участника</h3>
+        <label class="field-label" for="invite-user-id">UUID пользователя</label>
         <div class="autocomplete-wrap">
-            <input class="field-input" type="text" id="invite-user-id" placeholder="Start typing a name..." autocomplete="off">
+            <input class="field-input" type="text" id="invite-user-id" placeholder="Начните вводить имя..." autocomplete="off">
             <div class="autocomplete-list" id="ac-invite-user-id"></div>
         </div>
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="hideModal('invite-member-modal')">Cancel</button>
-            <button class="btn btn-primary" onclick="inviteMember()">Invite</button>
+            <button class="btn btn-ghost" onclick="hideModal('invite-member-modal')">Отмена</button>
+            <button class="btn btn-primary" onclick="inviteMember()">Пригласить</button>
         </div>
     </div>
 </div>
@@ -1558,13 +1558,13 @@
 <!-- Edit Message Modal -->
 <div class="modal-overlay" id="edit-message-modal">
     <div class="modal">
-        <h3>Edit Message</h3>
-        <label class="field-label" for="edit-message-content">Content</label>
-        <input class="field-input" type="text" id="edit-message-content" placeholder="New content" maxlength="4000">
+        <h3>Редактировать сообщение</h3>
+        <label class="field-label" for="edit-message-content">Текст</label>
+        <input class="field-input" type="text" id="edit-message-content" placeholder="Новый текст" maxlength="4000">
         <input type="hidden" id="edit-message-id">
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="hideModal('edit-message-modal')">Cancel</button>
-            <button class="btn btn-primary" onclick="editMessage()">Save</button>
+            <button class="btn btn-ghost" onclick="hideModal('edit-message-modal')">Отмена</button>
+            <button class="btn btn-primary" onclick="editMessage()">Сохранить</button>
         </div>
     </div>
 </div>
@@ -1572,13 +1572,13 @@
 <!-- Create Profile Modal -->
 <div class="modal-overlay" id="create-profile-modal">
     <div class="modal">
-        <h3>Set Up Your Profile</h3>
-        <label class="field-label" for="new-profile-name">Display Name</label>
-        <input class="field-input" type="text" id="new-profile-name" placeholder="Your name" onkeydown="if(event.key==='Enter')createProfile()">
-        <label class="field-label" for="new-profile-photo">Photo URL (optional)</label>
+        <h3>Настройка профиля</h3>
+        <label class="field-label" for="new-profile-name">Отображаемое имя</label>
+        <input class="field-input" type="text" id="new-profile-name" placeholder="Ваше имя" onkeydown="if(event.key==='Enter')createProfile()">
+        <label class="field-label" for="new-profile-photo">URL фото (необязательно)</label>
         <input class="field-input" type="url" id="new-profile-photo" placeholder="https://example.com/avatar.png">
         <div class="modal-actions">
-            <button class="btn btn-primary" onclick="createProfile()">Save</button>
+            <button class="btn btn-primary" onclick="createProfile()">Сохранить</button>
         </div>
     </div>
 </div>
@@ -1586,15 +1586,15 @@
 <!-- Send Contact Invite Modal -->
 <div class="modal-overlay" id="send-invite-modal">
     <div class="modal">
-        <h3>Add Contact</h3>
-        <label class="field-label" for="send-invite-user">User</label>
+        <h3>Добавить контакт</h3>
+        <label class="field-label" for="send-invite-user">Пользователь</label>
         <div class="autocomplete-wrap">
-            <input class="field-input" type="text" id="send-invite-user" placeholder="Start typing a name..." autocomplete="off">
+            <input class="field-input" type="text" id="send-invite-user" placeholder="Начните вводить имя..." autocomplete="off">
             <div class="autocomplete-list" id="ac-send-invite-user"></div>
         </div>
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="hideModal('send-invite-modal')">Cancel</button>
-            <button class="btn btn-primary" onclick="sendContactInvite()">Send Invite</button>
+            <button class="btn btn-ghost" onclick="hideModal('send-invite-modal')">Отмена</button>
+            <button class="btn btn-primary" onclick="sendContactInvite()">Отправить заявку</button>
         </div>
     </div>
 </div>
@@ -1602,14 +1602,14 @@
 <!-- Edit Profile Modal -->
 <div class="modal-overlay" id="edit-profile-modal">
     <div class="modal">
-        <h3>Edit Profile</h3>
-        <label class="field-label" for="edit-profile-name">Display Name</label>
-        <input class="field-input" type="text" id="edit-profile-name" placeholder="Your name">
-        <label class="field-label" for="edit-profile-photo">Photo URL (optional)</label>
+        <h3>Редактировать профиль</h3>
+        <label class="field-label" for="edit-profile-name">Отображаемое имя</label>
+        <input class="field-input" type="text" id="edit-profile-name" placeholder="Ваше имя">
+        <label class="field-label" for="edit-profile-photo">URL фото (необязательно)</label>
         <input class="field-input" type="url" id="edit-profile-photo" placeholder="https://example.com/avatar.png">
         <div class="modal-actions">
-            <button class="btn btn-ghost" onclick="hideModal('edit-profile-modal')">Cancel</button>
-            <button class="btn btn-primary" onclick="updateProfile()">Save</button>
+            <button class="btn btn-ghost" onclick="hideModal('edit-profile-modal')">Отмена</button>
+            <button class="btn btn-primary" onclick="updateProfile()">Сохранить</button>
         </div>
     </div>
 </div>
@@ -3252,18 +3252,18 @@
 <div class="modal-overlay" id="restore-key-modal">
     <div class="modal" style="max-width:420px">
         <div class="modal-header">
-            <span class="modal-title">Restore Encryption Keys</span>
+            <span class="modal-title">Восстановление ключей шифрования</span>
         </div>
         <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px">
-            An encrypted key backup was found on the server. Enter your backup password to restore access to your encrypted messages.
+            На сервере найдена резервная копия ключа. Введите пароль, чтобы восстановить доступ к зашифрованным сообщениям.
         </p>
         <div class="field-group">
-            <label class="field-label">Backup password</label>
-            <input class="field-input" type="password" id="restore-pwd" placeholder="Enter backup password">
+            <label class="field-label">Пароль резервной копии</label>
+            <input class="field-input" type="password" id="restore-pwd" placeholder="Введите пароль резервной копии">
         </div>
         <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn btn-primary btn-block" onclick="submitRestoreKey()">Restore</button>
-            <button class="btn btn-secondary" onclick="skipRestoreKey()">Generate new keys</button>
+            <button class="btn btn-primary btn-block" onclick="submitRestoreKey()">Восстановить</button>
+            <button class="btn btn-secondary" onclick="skipRestoreKey()">Создать новые ключи</button>
         </div>
     </div>
 </div>
@@ -3272,23 +3272,23 @@
 <div class="modal-overlay" id="backup-password-modal">
     <div class="modal" style="max-width:420px">
         <div class="modal-header">
-            <span class="modal-title">Set Backup Password</span>
+            <span class="modal-title">Резервная копия ключа</span>
             <button class="modal-close" onclick="hideModal('backup-password-modal')">&#x2715;</button>
         </div>
         <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px">
             Ваш ключ шифрования сохранён только в этом браузере. Без резервной копии при входе с другого устройства или браузера будет создан новый ключ — все текущие зашифрованные переписки станут нечитаемы навсегда.
         </p>
         <div class="field-group">
-            <label class="field-label">Password</label>
-            <input class="field-input" type="password" id="backup-pwd-1" placeholder="Min 8 characters">
+            <label class="field-label">Пароль</label>
+            <input class="field-input" type="password" id="backup-pwd-1" placeholder="Минимум 8 символов">
         </div>
         <div class="field-group">
-            <label class="field-label">Confirm password</label>
-            <input class="field-input" type="password" id="backup-pwd-2" placeholder="Repeat password">
+            <label class="field-label">Подтвердите пароль</label>
+            <input class="field-input" type="password" id="backup-pwd-2" placeholder="Повторите пароль">
         </div>
         <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn btn-primary btn-block" onclick="submitBackupPassword()">Save backup</button>
-            <button class="btn btn-secondary" onclick="hideModal('backup-password-modal')">Skip</button>
+            <button class="btn btn-primary btn-block" onclick="submitBackupPassword()">Сохранить резервную копию</button>
+            <button class="btn btn-secondary" onclick="hideModal('backup-password-modal')">Пропустить</button>
         </div>
         <p style="margin-top:8px;font-size:12px;color:var(--warning)">
             ⚠ Без резервной копии восстановить доступ к зашифрованным сообщениям с другого устройства невозможно.
@@ -3300,15 +3300,15 @@
 <div class="modal-overlay" id="export-key-modal">
     <div class="modal" style="max-width:380px">
         <div class="modal-header">
-            <span class="modal-title">Export Encryption Key</span>
+            <span class="modal-title">Экспорт ключа шифрования</span>
             <button class="modal-close" onclick="hideModal('export-key-modal')">&#x2715;</button>
         </div>
         <div class="field-group">
-            <label class="field-label">Password to protect the file</label>
-            <input class="field-input" type="password" id="export-key-pwd" placeholder="Enter password">
+            <label class="field-label">Пароль для защиты файла</label>
+            <input class="field-input" type="password" id="export-key-pwd" placeholder="Введите пароль">
         </div>
         <button class="btn btn-primary btn-block" style="margin-top:12px"
-                onclick="submitExportKey()">Download key file</button>
+                onclick="submitExportKey()">Скачать файл ключа</button>
     </div>
 </div>
 
@@ -3316,15 +3316,15 @@
 <div class="modal-overlay" id="mitm-warning-modal">
     <div class="modal" style="max-width:460px">
         <div class="modal-header">
-            <span class="modal-title" style="color:var(--danger)">&#x26A0; Security Warning</span>
+            <span class="modal-title" style="color:var(--danger)">&#x26A0; Предупреждение безопасности</span>
         </div>
         <p style="color:var(--text-secondary);font-size:14px;margin-bottom:12px">
-            The encryption key for this contact has changed. This may indicate a MITM attack or the contact switched devices.
+            Ключ шифрования этого контакта изменился. Возможна MITM-атака или контакт сменил устройство.
         </p>
         <p style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px" id="mitm-warning-detail"></p>
         <div style="display:flex;gap:8px">
-            <button class="btn btn-danger" onclick="resolveMitmWarning(true)">Accept new key</button>
-            <button class="btn btn-secondary" onclick="resolveMitmWarning(false)">Cancel</button>
+            <button class="btn btn-danger" onclick="resolveMitmWarning(true)">Принять новый ключ</button>
+            <button class="btn btn-secondary" onclick="resolveMitmWarning(false)">Отмена</button>
         </div>
     </div>
 </div>
